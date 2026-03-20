@@ -1,0 +1,49 @@
+# ---- OS / Editors ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# ---- Environment / Secrets ----
+.env
+.env.*
+!.env.example
+*.local
+
+# ---- Logs ----
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- Node / Frontend ----
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/coverage/
+
+# ---- Go / Backend ----
+svc-catalog/bin/
+svc-catalog/coverage.out
+svc-catalog/*.test
+svc-catalog/*.exe
+svc-catalog/*.exe~
+svc-catalog/*.dll
+svc-catalog/*.so
+svc-catalog/*.dylib
+
+# ---- Generic build artifacts ----
+build/
+dist/
+tmp/
+*.out
+
+# ---- Docker ----
+.docker/
+docker-compose.override.yml
