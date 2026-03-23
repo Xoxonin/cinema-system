@@ -10,8 +10,9 @@ import (
 	"time"
 
 	"cinema/user-service/internal/db"
+
 	"github.com/golang-jwt/jwt/v5"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -38,7 +39,7 @@ func main() {
 		dbURL = "postgres://postgres:postgres@localhost:5432/users?sslmode=disable"
 	}
 
-	dbConn, err := sql.Open("postgres", dbURL)
+	dbConn, err := sql.Open("pgx", dbURL)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
