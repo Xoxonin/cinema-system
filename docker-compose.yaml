@@ -1,0 +1,172 @@
+version: '3.8'
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+networks:
+  cinema-net:
+    driver: bridge
+
+volumes:
+  pg_users:
+  pg_catalog:
+  pg_showtime:
+  pg_booking:
+
+services:
+  db-users:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: users
+    volumes:
+      - pg_users:/var/lib/postgresql/data
+    networks:
+      - cinema-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  db-catalog:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: catalog
+    volumes:
+      - pg_catalog:/var/lib/postgresql/data
+    networks:
+      - cinema-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  db-showtime:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: showtime
+    volumes:
+      - pg_showtime:/var/lib/postgresql/data
+    networks:
+      - cinema-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  db-booking:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: booking
+    volumes:
+      - pg_booking:/var/lib/postgresql/data
+    networks:
+      - cinema-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  user-service:
+    build:
+      context: ./user-service
+    ports:
+      - "8081:8081"
+    environment:
+      - DATABASE_URL=postgres://postgres:${DB_PASSWORD:-postgres}@db-users:5432/users?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:-supersecret}
+    depends_on:
+      db-users:
+        condition: service_healthy
+    networks:
+      - cinema-net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  catalog-service:
+    build:
+      context: ./catalog-service
+    ports:
+      - "8082:8082"
+    environment:
+      - DATABASE_URL=postgres://postgres:${DB_PASSWORD:-postgres}@db-catalog:5432/catalog?sslmode=disable
+    depends_on:
+      db-catalog:
+        condition: service_healthy
+    networks:
+      - cinema-net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  showtime-service:
+    build:
+      context: ./showtime-service
+    ports:
+      - "8083:8083"
+    environment:
+      - DATABASE_URL=postgres://postgres:${DB_PASSWORD:-postgres}@db-showtime:5432/showtime?sslmode=disable
+    depends_on:
+      db-showtime:
+        condition: service_healthy
+    networks:
+      - cinema-net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  booking-service:
+    build:
+      context: ./booking-service
+    ports:
+      - "8084:8084"
+    environment:
+      - DATABASE_URL=postgres://postgres:${DB_PASSWORD:-postgres}@db-booking:5432/booking?sslmode=disable
+    depends_on:
+      db-booking:
+        condition: service_healthy
+    networks:
+      - cinema-net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:8080"
+    networks:
+      - cinema-net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 128M

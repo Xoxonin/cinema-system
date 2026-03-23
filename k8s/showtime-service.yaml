@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: showtime-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: showtime-service
+  template:
+    metadata:
+      labels:
+        app: showtime-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: showtime-service
+          image: myrepo/showtime-service:1.0.0
+          ports:
+            - containerPort: 8083
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: showtime_db_url
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8083
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: showtime-service
+spec:
+  selector:
+    app: showtime-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8083
