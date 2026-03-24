@@ -12,7 +12,7 @@ import (
 	"cinema/user-service/internal/db"
 
 	"github.com/golang-jwt/jwt/v5"
-	_ "github.com/jackc/pgx"
+	_ "github.com/jackc/pgx/stdlib"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -50,6 +50,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /register", registerHandler)
 	mux.HandleFunc("POST /login", loginHandler)
+	mux.HandleFunc("GET /profile", profileHandler)
 	mux.HandleFunc("GET /health", healthHandler)
 
 	log.Println("User Service starting on port 8081")
@@ -121,4 +122,37 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(TokenResponse{Token: tokenString})
+}
+
+func profileHandler(w http.ResponseWriter, r *http.Request) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" || len(authHeader) < 8 || authHeader[:7] != "Bearer " {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	tokenString := authHeader[7:]
+
+	claims := &jwt.RegisteredClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := queries.GetUserByEmail(context.Background(), claims.Subject)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// omit password hash
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"id":       user.ID,
+		"username": user.Username,
+		"email":    user.Email,
+		"role":     user.Role,
+	})
 }

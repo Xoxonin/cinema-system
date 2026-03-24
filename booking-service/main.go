@@ -11,7 +11,7 @@ import (
 
 	"cinema/booking-service/internal/db"
 
-	_ "github.com/jackc/pgx"
+	_ "github.com/jackc/pgx/stdlib"
 )
 
 var queries *db.Queries

@@ -10,6 +10,11 @@ export default defineConfig({
         target: 'http://localhost:8082',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/movies/, '/movies'),
+      },
+      '/api/users': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/users/, ''),
       }
     }
   }
