@@ -1,0 +1,2 @@
+ALTER TABLE bookings ADD COLUMN ticket_type VARCHAR(50);
+ALTER TABLE bookings ADD COLUMN locked_until TIMESTAMP WITH TIME ZONE;

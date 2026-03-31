@@ -28,6 +28,11 @@ type TokenResponse struct {
 	Token string `json:"token"`
 }
 
+type Claims struct {
+	UserID int32 `json:"userId"`
+	jwt.RegisteredClaims
+}
+
 var queries *db.Queries
 
 func main() {
@@ -109,9 +114,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := &jwt.RegisteredClaims{
-		Subject:   user.Email,
-		ExpiresAt: jwt.NewNumericDate(expirationTime),
+	claims := &Claims{
+		UserID: user.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   user.Email,
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -132,7 +140,7 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	tokenString := authHeader[7:]
 
-	claims := &jwt.RegisteredClaims{}
+	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})

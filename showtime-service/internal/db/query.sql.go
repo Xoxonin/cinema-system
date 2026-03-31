@@ -7,28 +7,35 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 )
 
 const createRoom = `-- name: CreateRoom :one
-INSERT INTO rooms (name, capacity) VALUES ($1, $2) RETURNING id, name, capacity
+INSERT INTO rooms (name, capacity, seating_layout) VALUES ($1, $2, CAST($3 AS JSONB)) RETURNING id, name, capacity, seating_layout
 `
 
 type CreateRoomParams struct {
-	Name     string `json:"name"`
-	Capacity int32  `json:"capacity"`
+	Name     string          `json:"name"`
+	Capacity int32           `json:"capacity"`
+	Column3  json.RawMessage `json:"column_3"`
 }
 
 func (q *Queries) CreateRoom(ctx context.Context, arg CreateRoomParams) (Room, error) {
-	row := q.db.QueryRowContext(ctx, createRoom, arg.Name, arg.Capacity)
+	row := q.db.QueryRowContext(ctx, createRoom, arg.Name, arg.Capacity, arg.Column3)
 	var i Room
-	err := row.Scan(&i.ID, &i.Name, &i.Capacity)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Capacity,
+		&i.SeatingLayout,
+	)
 	return i, err
 }
 
 const createShowtime = `-- name: CreateShowtime :one
-INSERT INTO showtimes (movie_id, room_id, start_time, end_time)
-VALUES ($1, $2, $3, $4) RETURNING id, movie_id, room_id, start_time, end_time
+INSERT INTO showtimes (movie_id, room_id, start_time, end_time, type)
+VALUES ($1, $2, $3, $4, $5) RETURNING id, movie_id, room_id, start_time, end_time, type
 `
 
 type CreateShowtimeParams struct {
@@ -36,6 +43,7 @@ type CreateShowtimeParams struct {
 	RoomID    int32     `json:"room_id"`
 	StartTime time.Time `json:"start_time"`
 	EndTime   time.Time `json:"end_time"`
+	Type      string    `json:"type"`
 }
 
 func (q *Queries) CreateShowtime(ctx context.Context, arg CreateShowtimeParams) (Showtime, error) {
@@ -44,6 +52,7 @@ func (q *Queries) CreateShowtime(ctx context.Context, arg CreateShowtimeParams) 
 		arg.RoomID,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Type,
 	)
 	var i Showtime
 	err := row.Scan(
@@ -52,12 +61,13 @@ func (q *Queries) CreateShowtime(ctx context.Context, arg CreateShowtimeParams) 
 		&i.RoomID,
 		&i.StartTime,
 		&i.EndTime,
+		&i.Type,
 	)
 	return i, err
 }
 
 const getShowtime = `-- name: GetShowtime :one
-SELECT id, movie_id, room_id, start_time, end_time FROM showtimes WHERE id = $1 LIMIT 1
+SELECT id, movie_id, room_id, start_time, end_time, type FROM showtimes WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetShowtime(ctx context.Context, id int32) (Showtime, error) {
@@ -69,12 +79,13 @@ func (q *Queries) GetShowtime(ctx context.Context, id int32) (Showtime, error) {
 		&i.RoomID,
 		&i.StartTime,
 		&i.EndTime,
+		&i.Type,
 	)
 	return i, err
 }
 
 const listRooms = `-- name: ListRooms :many
-SELECT id, name, capacity FROM rooms ORDER BY id
+SELECT id, name, capacity, seating_layout FROM rooms ORDER BY id
 `
 
 func (q *Queries) ListRooms(ctx context.Context) ([]Room, error) {
@@ -86,7 +97,12 @@ func (q *Queries) ListRooms(ctx context.Context) ([]Room, error) {
 	var items []Room
 	for rows.Next() {
 		var i Room
-		if err := rows.Scan(&i.ID, &i.Name, &i.Capacity); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Capacity,
+			&i.SeatingLayout,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -101,7 +117,7 @@ func (q *Queries) ListRooms(ctx context.Context) ([]Room, error) {
 }
 
 const listShowtimesByMovie = `-- name: ListShowtimesByMovie :many
-SELECT id, movie_id, room_id, start_time, end_time FROM showtimes WHERE movie_id = $1 ORDER BY start_time
+SELECT id, movie_id, room_id, start_time, end_time, type FROM showtimes WHERE movie_id = $1 ORDER BY start_time
 `
 
 func (q *Queries) ListShowtimesByMovie(ctx context.Context, movieID int32) ([]Showtime, error) {
@@ -119,6 +135,7 @@ func (q *Queries) ListShowtimesByMovie(ctx context.Context, movieID int32) ([]Sh
 			&i.RoomID,
 			&i.StartTime,
 			&i.EndTime,
+			&i.Type,
 		); err != nil {
 			return nil, err
 		}

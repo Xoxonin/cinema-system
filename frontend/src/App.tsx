@@ -4,6 +4,10 @@ import { Home } from './Home';
 import { Login } from './Login';
 import { Register } from './Register';
 import { Profile } from './Profile';
+import { ShowtimeSelection } from './ShowtimeSelection';
+import { SeatSelection } from './SeatSelection';
+import { TicketSelection } from './TicketSelection';
+import { MyTickets } from './MyTickets';
 import './index.css';
 
 function Navbar({ token, setAuthToken }: { token: string | null, setAuthToken: (t: string | null) => void }) {
@@ -23,7 +27,7 @@ function Navbar({ token, setAuthToken }: { token: string | null, setAuthToken: (
         <Link to="/" className="hover:text-purple-400 transition-colors">Movies</Link>
         {token ? (
           <>
-            <Link to="#" className="hover:text-pink-400 transition-colors">My Tickets</Link>
+            <Link to="/my-tickets" className="hover:text-pink-400 transition-colors">My Tickets</Link>
             <Link to="/profile" className="hover:text-pink-400 transition-colors">Profile</Link>
             <button onClick={handleLogout} className="px-4 py-2 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors border border-red-500 hover:border-transparent">Logout</button>
           </>
@@ -55,10 +59,14 @@ function App() {
       <div className="w-full min-h-screen text-white bg-gray-900 p-8 font-sans">
         <Navbar token={token} setAuthToken={setAuthToken} />
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home token={token} />} />
           <Route path="/login" element={<Login setAuthToken={setAuthToken} />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile token={token} setAuthToken={setAuthToken} />} />
+          <Route path="/movie/:id/showtimes" element={<ShowtimeSelection />} />
+          <Route path="/book/:showtime_id/seats" element={<SeatSelection token={token} />} />
+          <Route path="/book/:showtime_id/confirm" element={<TicketSelection token={token} />} />
+          <Route path="/my-tickets" element={<MyTickets token={token} />} />
         </Routes>
       </div>
     </Router>

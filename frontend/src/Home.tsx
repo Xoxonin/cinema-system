@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 interface SqlNullString {
   String: string;
@@ -19,8 +20,9 @@ interface Movie {
   created_at: SqlNullTime;
 }
 
-export function Home() {
+export function Home({ token }: { token?: string | null }) {
   const [movies, setMovies] = useState<Movie[]>([])
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetch('/api/movies')
@@ -46,7 +48,17 @@ export function Home() {
               {movie.description?.Valid ? movie.description.String : "No description available."}
             </p>
             <div className="mt-auto">
-              <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-pink-500/25 transition-all outline-none focus:ring-2 focus:ring-pink-400">
+              <button 
+                onClick={() => {
+                  if (!token) {
+                    alert("Tylko zalogowani użytkownicy mogą rezerwować bilety.");
+                    navigate('/login');
+                  } else {
+                    navigate(`/movie/${movie.id}/showtimes`);
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-pink-500/25 transition-all outline-none focus:ring-2 focus:ring-pink-400"
+              >
                 Book Ticket
               </button>
             </div>

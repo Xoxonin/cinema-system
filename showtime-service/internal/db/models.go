@@ -5,13 +5,15 @@
 package db
 
 import (
+	"encoding/json"
 	"time"
 )
 
 type Room struct {
-	ID       int32  `json:"id"`
-	Name     string `json:"name"`
-	Capacity int32  `json:"capacity"`
+	ID            int32           `json:"id"`
+	Name          string          `json:"name"`
+	Capacity      int32           `json:"capacity"`
+	SeatingLayout json.RawMessage `json:"seating_layout"`
 }
 
 type Showtime struct {
@@ -20,4 +22,5 @@ type Showtime struct {
 	RoomID    int32     `json:"room_id"`
 	StartTime time.Time `json:"start_time"`
 	EndTime   time.Time `json:"end_time"`
+	Type      string    `json:"type"`
 }

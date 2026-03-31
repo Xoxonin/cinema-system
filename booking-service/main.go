@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"cinema/booking-service/internal/db"
 
@@ -20,6 +21,12 @@ type BookingInput struct {
 	UserID     int32  `json:"user_id"`
 	ShowtimeID int32  `json:"showtime_id"`
 	SeatNumber string `json:"seat_number"`
+}
+
+type ConfirmInput struct {
+	BookingID  int32  `json:"booking_id"`
+	UserID     int32  `json:"user_id"`
+	TicketType string `json:"ticket_type"`
 }
 
 func main() {
@@ -39,7 +46,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("GET /bookings", listBookingsHandler)
-	mux.HandleFunc("POST /bookings", createBookingHandler)
+	mux.HandleFunc("POST /bookings/lock", lockSeatHandler)
+	mux.HandleFunc("POST /bookings/confirm", confirmBookingHandler)
 
 	log.Println("Booking Service starting on port 8084")
 	log.Fatal(http.ListenAndServe(":8084", mux))
@@ -75,22 +83,56 @@ func listBookingsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(bookings)
 }
 
-func createBookingHandler(w http.ResponseWriter, r *http.Request) {
+func lockSeatHandler(w http.ResponseWriter, r *http.Request) {
 	var input BookingInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	booking, err := queries.CreateBooking(context.Background(), db.CreateBookingParams{
-		UserID:     input.UserID,
-		ShowtimeID: input.ShowtimeID,
-		SeatNumber: input.SeatNumber,
-		Status:     "reserved",
+	// Lock for 5 minutes
+	lockedUntil := sql.NullTime{
+		Time:  javaTimeNowPlus5Mins(),
+		Valid: true,
+	}
+	booking, err := queries.LockSeat(context.Background(), db.LockSeatParams{
+		UserID:      input.UserID,
+		ShowtimeID:  input.ShowtimeID,
+		SeatNumber:  input.SeatNumber,
+		LockedUntil: lockedUntil,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Seat already locked or reserved: "+err.Error(), http.StatusConflict)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(booking)
+}
+
+func confirmBookingHandler(w http.ResponseWriter, r *http.Request) {
+	var input ConfirmInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	ticketType := sql.NullString{
+		String: input.TicketType,
+		Valid:  input.TicketType != "",
+	}
+	booking, err := queries.ConfirmBooking(context.Background(), db.ConfirmBookingParams{
+		ID:         input.BookingID,
+		UserID:     input.UserID,
+		TicketType: ticketType,
+	})
+	if err != nil {
+		http.Error(w, "Failed to confirm booking: "+err.Error(), http.StatusConflict)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(booking)
+}
+
+// Helper time function
+func javaTimeNowPlus5Mins() time.Time {
+	// Import "time" should be added
+	return time.Now().Add(5 * time.Minute)
 }
