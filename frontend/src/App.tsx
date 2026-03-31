@@ -17,7 +17,7 @@ function Navbar({ token, setAuthToken }: { token: string | null, setAuthToken: (
   return (
     <header className="max-w-6xl mx-auto flex justify-between items-center bg-gray-800 p-6 rounded-xl shadow-lg mb-12 border border-gray-700">
       <Link to="/" className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-        Nexus Cinema
+        MovieKube
       </Link>
       <nav className="flex space-x-6 text-lg font-medium items-center">
         <Link to="/" className="hover:text-purple-400 transition-colors">Movies</Link>
