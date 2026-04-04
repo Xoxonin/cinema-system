@@ -1,6 +1,5 @@
 # Build stage
-# USTAWIĆ WERSJĘ NODE'A
-FROM node:alpine3.23 AS builder
+FROM node:25.9.0-alpine3.23 AS builder
 
 WORKDIR /app
 COPY package.json package-lock.json ./
