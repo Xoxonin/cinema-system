@@ -12,7 +12,7 @@ import (
 
 	"cinema/booking-service/internal/db"
 
-	_ "github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var queries *db.Queries
