@@ -12,7 +12,7 @@ import (
 	"cinema/user-service/internal/db"
 
 	"github.com/golang-jwt/jwt/v5"
-	_ "github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"golang.org/x/crypto/bcrypt"
 )
 

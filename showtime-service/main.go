@@ -12,7 +12,7 @@ import (
 
 	"cinema/showtime-service/internal/db"
 
-	_ "github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var queries *db.Queries
@@ -144,13 +144,13 @@ func seedData() {
 			// Room 1 has 10 rows of 10, room 2 has 12 rows of 10 etc.
 			capacity := int32(100 + i*10)
 			rows := 10 + i
-			
+
 			var layout []map[string]interface{}
 			for r := 1; r <= rows; r++ {
 				layout = append(layout, map[string]interface{}{"row": r, "seats": 10})
 			}
 			layoutJSON, _ := json.Marshal(layout)
-			
+
 			_, err := queries.CreateRoom(context.Background(), db.CreateRoomParams{
 				Name:     "Room " + strconv.Itoa(i),
 				Capacity: capacity,
@@ -172,7 +172,7 @@ func seedData() {
 				roomID := (movieID+s)%10 + 1
 				startTime := time.Now().Add(time.Duration(movieID*24+s*3) * time.Hour)
 				endTime := startTime.Add(2 * time.Hour)
-				
+
 				_, err := queries.CreateShowtime(context.Background(), db.CreateShowtimeParams{
 					MovieID:   movieID,
 					RoomID:    roomID,

@@ -14,6 +14,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 # Final stage
 FROM alpine:3.23
 
+# Fix CVE-2026-22184 and CVE-2026-27171
+RUN apk update && apk add --no-cache --upgrade zlib
+
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
