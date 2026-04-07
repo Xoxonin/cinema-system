@@ -94,7 +94,7 @@ export function MyTickets({ token }: { token: string | null }) {
              });
           });
 
-          const now = new Date('2026-03-31T11:44:03+02:00').getTime(); // System date
+          const now = Date.now();
           const coming: GroupedBooking[] = [];
           const history: GroupedBooking[] = [];
           
@@ -138,7 +138,7 @@ export function MyTickets({ token }: { token: string | null }) {
                     <div key={group.showtime_id} className="bg-gradient-to-br from-gray-800 to-gray-900 border border-purple-500/30 p-6 rounded-2xl shadow-xl hover:shadow-purple-500/20 transition-all">
                        <h3 className="text-2xl font-bold mb-2 truncate" title={group.movie?.title}>{group.movie?.title}</h3>
                        <div className="text-pink-400 font-bold mb-4 opacity-90 inline-block px-3 py-1 bg-pink-500/10 rounded-lg">
-                          {new Date(group.showtime.start_time).toLocaleString()}
+                          {new Date(group.showtime.start_time).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                        </div>
                        
                        <div className="space-y-3 mt-4">
@@ -167,12 +167,12 @@ export function MyTickets({ token }: { token: string | null }) {
            {past.length === 0 ? (
               <div className="bg-gray-800/50 rounded-2xl p-8 text-center text-gray-500 italic">No past tickets</div>
            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 opacity-75 grayscale hover:grayscale-0 transition-all">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  {past.map(group => (
-                    <div key={group.showtime_id} className="bg-gray-800 border-none p-6 rounded-2xl shadow-inner flex flex-col items-center">
+                    <div key={group.showtime_id} className="bg-gray-800 border-none p-6 rounded-2xl shadow-inner flex flex-col items-center opacity-75 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
                        <h3 className="text-xl font-bold mb-1 truncate w-full text-center text-gray-400">{group.movie?.title}</h3>
                        <div className="text-gray-500 text-sm mb-4">
-                          {new Date(group.showtime.start_time).toLocaleDateString()}
+                          {new Date(group.showtime.start_time).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                        </div>
                        <div className="w-full space-y-2 mt-2">
                           {group.tickets.map(t => (
@@ -181,6 +181,9 @@ export function MyTickets({ token }: { token: string | null }) {
                                 <span className="text-gray-500 bg-gray-800 px-2 py-1 rounded">{t.ticket_type}</span>
                              </div>
                           ))}
+                       </div>
+                       <div className="mt-4 text-[10px] text-gray-500 text-center uppercase tracking-widest border-t border-gray-700 pt-2 opacity-50 w-full">
+                         {group.showtime.type}
                        </div>
                     </div>
                  ))}
