@@ -51,7 +51,7 @@ export function Home({ token }: { token?: string | null }) {
               <button 
                 onClick={() => {
                   if (!token) {
-                    alert("Tylko zalogowani użytkownicy mogą rezerwować bilety.");
+                    alert("Only logged-in users can book tickets.");
                     navigate('/login');
                   } else {
                     navigate(`/movie/${movie.id}/showtimes`);
