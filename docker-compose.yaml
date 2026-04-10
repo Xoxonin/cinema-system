@@ -232,6 +232,15 @@ services:
       context: ./frontend
     ports:
       - "8080:8080"
+    depends_on:
+      user-service:
+        condition: service_started
+      catalog-service:
+        condition: service_started
+      showtime-service:
+        condition: service_started
+      booking-service:
+        condition: service_started
     networks:
       - cinema-net
     logging: *default-logging
