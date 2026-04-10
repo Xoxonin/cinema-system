@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.26.1-alpine3.23 AS builder
+FROM golang:1.26.2-alpine3.23 AS builder
 
 WORKDIR /app
 
@@ -14,8 +14,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 # Final stage
 FROM alpine:3.23
 
-# Fix CVE-2026-22184 and CVE-2026-27171
-RUN apk update && apk add --no-cache --upgrade zlib
+# Update and upgrade packages to avoid vulnerabilities
+RUN apk update && \
+    apk upgrade --no-cache && \
+    rm -rf /var/cache/apk/*
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser

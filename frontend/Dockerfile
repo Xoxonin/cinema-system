@@ -9,7 +9,15 @@ COPY . .
 RUN npm run build
 
 # Final stage
-FROM nginxinc/nginx-unprivileged:1.25-alpine
+FROM nginxinc/nginx-unprivileged:1.27-alpine
+
+# Update and upgrade packages to avoid vulnerabilities
+USER root
+RUN apk update && \
+    apk upgrade --no-cache && \
+    rm -rf /var/cache/apk/*
+
+USER nginx
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
