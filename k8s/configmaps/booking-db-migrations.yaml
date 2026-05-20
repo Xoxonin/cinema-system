@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: booking-db-migrations
+  namespace: backend-ns
+data:
+  000001_init.up.sql: |
+    CREATE TABLE bookings (
+        id SERIAL PRIMARY KEY,
+        user_id INT NOT NULL,
+        showtime_id INT NOT NULL,
+        seat_number VARCHAR(10) NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'reserved',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(showtime_id, seat_number)
+    );
+  000002_add_ticket_type_and_locks.up.sql: |
+    ALTER TABLE bookings ADD COLUMN ticket_type VARCHAR(50);
+    ALTER TABLE bookings ADD COLUMN locked_until TIMESTAMP WITH TIME ZONE;

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: showtime-db-migrations
+  namespace: backend-ns
+data:
+  000001_init.up.sql: |
+    CREATE TABLE rooms (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) NOT NULL,
+        capacity INT NOT NULL
+    );
+    CREATE TABLE showtimes (
+        id SERIAL PRIMARY KEY,
+        movie_id INT NOT NULL,
+        room_id INT NOT NULL REFERENCES rooms(id),
+        start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+        end_time TIMESTAMP WITH TIME ZONE NOT NULL
+    );
+  000002_add_room_layout_and_showtime_type.up.sql: |
+    ALTER TABLE rooms ADD COLUMN seating_layout JSONB DEFAULT '[]'::JSONB NOT NULL;
+    ALTER TABLE showtimes ADD COLUMN type VARCHAR(50) DEFAULT '2D' NOT NULL;

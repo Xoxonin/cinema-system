@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: frontend-ns
+spec:
+  type: ExternalName
+  externalName: user-service.backend-ns.svc.cluster.local
