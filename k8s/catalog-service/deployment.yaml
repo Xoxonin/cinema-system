@@ -67,7 +67,7 @@ spec:
           mountPath: /migrations
       containers:
       - name: catalog-service
-        image: myrepo/catalog-service:1.0.0
+        image: adamad7/catalog-service:1.0.3
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8082

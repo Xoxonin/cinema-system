@@ -67,7 +67,7 @@ spec:
           mountPath: /migrations
       containers:
       - name: user-service
-        image: myrepo/user-service:1.0.0
+        image: adamad7/user-service:1.0.3
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8081

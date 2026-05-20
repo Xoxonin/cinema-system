@@ -64,18 +64,18 @@ Wykorzystując wcześniej skonfigurowane środowisko Docker w terminalu, zbuduj 
 
 ```bash
 # Budowanie mikroserwisów backendowych (Distroless runtime)
-docker build -t myrepo/user-service:1.0.0 ./user-service
-docker build -t myrepo/catalog-service:1.0.0 ./catalog-service
-docker build -t myrepo/showtime-service:1.0.0 ./showtime-service
-docker build -t myrepo/booking-service:1.0.0 ./booking-service
+docker build -t adamad7/user-service:1.0.3 ./user-service
+docker build -t adamad7/catalog-service:1.0.3 ./catalog-service
+docker build -t adamad7/showtime-service:1.0.3 ./showtime-service
+docker build -t adamad7/booking-service:1.0.3 ./booking-service
 
 # Budowanie frontendu (Nginx unprivileged, hardened)
-docker build -t myrepo/frontend:1.0.0 ./frontend
+docker build -t adamad7/frontend:1.0.3 ./frontend
 ```
 
 Zweryfikuj obecność obrazów w rejestrze Minikube:
 ```bash
-docker images | grep myrepo
+docker images | grep adamad7
 ```
 
 ---

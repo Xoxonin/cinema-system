@@ -1,7 +1,7 @@
 .PHONY: build-all push-all
 
-VERSION ?= 1.0.0
-REPO ?= myrepo
+VERSION ?= 1.0.3
+REPO ?= adamad7
 
 SERVICES = user-service catalog-service showtime-service booking-service frontend
 
