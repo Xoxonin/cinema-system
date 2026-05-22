@@ -1,6 +1,6 @@
 # Podręcznik instalacji i uruchomienia aplikacji w Minikube (SETUP.md)
 
-Ten przewodnik krok po kroku opisuje sposób budowania, konfigurowania, wdrażania oraz testowania rozproszonego systemu rezerwacji kinowych (**Cinema System**) w środowisku Kubernetes za pomocą narzędzia **Minikube**.
+Ten przewodnik krok po kroku opisuje sposób konfigurowania, wdrażania oraz testowania rozproszonego systemu rezerwacji kinowych (**Cinema System**) w środowisku Kubernetes za pomocą narzędzia **Minikube** z wykorzystaniem gotowych obrazów z rejestru **Docker Hub** (wersja `1.0.3`).
 
 ---
 
@@ -31,25 +31,11 @@ kubectl get nodes
 
 ---
 
-## 3. Konfiguracja środowiska Docker i Wolumenów Pamięci
+## 3. Konfiguracja Wolumenów Pamięci
 
-### Krok 3.1: Przekierowanie środowiska Docker na Minikube
-Aby Minikube widział lokalnie zbudowane obrazy bez konieczności wypychania ich do zewnętrznego rejestru (np. Docker Hub), skonfiguruj sesję powłoki:
+Nasza architektura korzysta z wolumenów typu `PersistentVolume` z mapowaniem ścieżek fizycznych (`local-storage` na węźle klastra). 
 
-**Dla powłoki Bash:**
-```bash
-eval $(minikube docker-env --shell bash)
-```
-
-**Dla powłoki Fish:**
-```fish
-minikube -p minikube docker-env | source
-```
-
----
-
-### Krok 3.2: Przygotowanie fizycznych katalogów pod bazy danych
-Nasza architektura korzysta z wolumenów typu `PersistentVolume` z mapowaniem ścieżek fizycznych (`local-storage` na węźle). Ponieważ kontenery bazodanowe są utwardzone i działają jako użytkownik nieuprzywilejowany (`runAsUser: 999`), należy utworzyć katalogi i nadać im uprawnienia na maszynie wirtualnej Minikube:
+Ponieważ kontenery bazodanowe są utwardzone i działają jako użytkownik nieuprzywilejowany (`runAsUser: 999`), należy utworzyć odpowiednie katalogi oraz nadać im wymagane uprawnienia bezpośrednio na maszynie wirtualnej Minikube:
 
 ```bash
 # Połączenie SSH z minikube w celu utworzenia katalogów i nadania uprawnień właściciela użytkownikowi o ID 999 (postgres)
@@ -58,24 +44,32 @@ minikube ssh "sudo mkdir -p /mnt/data/db-users /mnt/data/db-catalog /mnt/data/db
 
 ---
 
-## 4. Budowanie obrazów kontenerów
+## 4. Przygotowanie obrazów kontenerów z Docker Hub
 
-Wykorzystując wcześniej skonfigurowane środowisko Docker w terminalu, zbuduj wszystkie mikroserwisy oraz frontend:
+System jest w pełni przystosowany do uruchomienia przy użyciu gotowych, produkcyjnych obrazów umieszczonych w rejestrze **Docker Hub** w repozytorium użytkownika `adamad7` w wersji `1.0.3`.
+
+Dzięki temu **nie ma potrzeby lokalnego budowania obrazów** ani konfigurowania lokalnego środowiska Docker na Minikube. Manifesty wdrożeniowe Kubernetes są domyślnie skonfigurowane tak, aby automatycznie pobierać poniższe obrazy z Docker Hub:
+
+- Serwis użytkowników: `adamad7/user-service:1.0.3`
+- Serwis katalogu: `adamad7/catalog-service:1.0.3`
+- Serwis seansów: `adamad7/showtime-service:1.0.3`
+- Serwis rezerwacji: `adamad7/booking-service:1.0.3`
+- Aplikacja frontendowa: `adamad7/frontend:1.0.3`
+
+### Opcjonalne: Ręczne pobranie obrazów do pamięci klastra
+Jeśli chcesz pobrać obrazy wcześniej (np. w celu skrócenia czasu pierwszego uruchomienia wdrożenia lub pracy offline), możesz wydać polecenia pobrania obrazów bezpośrednio do pamięci klastra Minikube:
 
 ```bash
-# Budowanie mikroserwisów backendowych (Distroless runtime)
-docker build -t adamad7/user-service:1.0.3 ./user-service
-docker build -t adamad7/catalog-service:1.0.3 ./catalog-service
-docker build -t adamad7/showtime-service:1.0.3 ./showtime-service
-docker build -t adamad7/booking-service:1.0.3 ./booking-service
-
-# Budowanie frontendu (Nginx unprivileged, hardened)
-docker build -t adamad7/frontend:1.0.3 ./frontend
+minikube image pull adamad7/user-service:1.0.3
+minikube image pull adamad7/catalog-service:1.0.3
+minikube image pull adamad7/showtime-service:1.0.3
+minikube image pull adamad7/booking-service:1.0.3
+minikube image pull adamad7/frontend:1.0.3
 ```
 
-Zweryfikuj obecność obrazów w rejestrze Minikube:
+Możesz zweryfikować poprawność pobranych obrazów wewnątrz Minikube za pomocą:
 ```bash
-docker images | grep adamad7
+minikube image ls | grep adamad7
 ```
 
 ---
