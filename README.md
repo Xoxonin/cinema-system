@@ -28,7 +28,7 @@ graph TD
     %% Entry Points
     subgraph Klienci i Brzeg Klastra [Dostęp Zewnętrzny]
         Client[Przeglądarka Klienta]
-        Ingress[Ingress Controller - Port 80 / 443]
+        Ingress[cinema-ingress Ingress - Port 80 / 443]
         NodePort[Frontend NodePort Service - Port 30080]
     end
 
@@ -63,10 +63,12 @@ graph TD
 
     %% Connections - Ingress Path
     Client -->|Żądanie HTTP| Ingress
+    
     Ingress -->|Ścieżka / | FrontendPod
     Ingress -->|Ścieżka /api/users | ExtUser
     Ingress -->|Ścieżka /api/movies | ExtCatalog
     Ingress -->|Ścieżka /api/showtimes | ExtShowtime
+    Ingress -->|Ścieżka /api/rooms | ExtShowtime
     Ingress -->|Ścieżka /api/bookings | ExtBooking
 
     %% Connections - NodePort Path

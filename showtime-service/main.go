@@ -47,11 +47,11 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthHandler)
-	mux.HandleFunc("GET /rooms", listRoomsHandler)
-	mux.HandleFunc("POST /rooms", createRoomHandler)
-	mux.HandleFunc("GET /showtimes", listShowtimesHandler)
-	mux.HandleFunc("POST /showtimes", createShowtimeHandler)
-	mux.HandleFunc("GET /showtimes/{id}", getShowtimeHandler)
+	mux.HandleFunc("GET /api/rooms", listRoomsHandler)
+	mux.HandleFunc("POST /api/rooms", createRoomHandler)
+	mux.HandleFunc("GET /api/showtimes", listShowtimesHandler)
+	mux.HandleFunc("POST /api/showtimes", createShowtimeHandler)
+	mux.HandleFunc("GET /api/showtimes/{id}", getShowtimeHandler)
 
 	seedData()
 

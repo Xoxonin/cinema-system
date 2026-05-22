@@ -1,113 +1,48 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: cinema-ingress-users
+  name: cinema-ingress
   namespace: frontend-ns
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
   - http:
       paths:
-      - path: /api/users(/|$)(.*)
-        pathType: ImplementationSpecific
+      - path: /api/users
+        pathType: Prefix
         backend:
           service:
             name: user-service
             port:
               number: 8081
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: cinema-ingress-catalog
-  namespace: frontend-ns
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /movies$1$2
-spec:
-  ingressClassName: nginx
-  rules:
-  - http:
-      paths:
-      - path: /api/movies(/|$)(.*)
-        pathType: ImplementationSpecific
+      - path: /api/movies
+        pathType: Prefix
         backend:
           service:
             name: catalog-service
             port:
               number: 8082
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: cinema-ingress-showtime
-  namespace: frontend-ns
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /showtimes$1$2
-spec:
-  ingressClassName: nginx
-  rules:
-  - http:
-      paths:
-      - path: /api/showtimes(/|$)(.*)
-        pathType: ImplementationSpecific
+      - path: /api/showtimes
+        pathType: Prefix
         backend:
           service:
             name: showtime-service
             port:
               number: 8083
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: cinema-ingress-rooms
-  namespace: frontend-ns
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /rooms$1$2
-spec:
-  ingressClassName: nginx
-  rules:
-  - http:
-      paths:
-      - path: /api/rooms(/|$)(.*)
-        pathType: ImplementationSpecific
+      - path: /api/rooms
+        pathType: Prefix
         backend:
           service:
             name: showtime-service
             port:
               number: 8083
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: cinema-ingress-booking
-  namespace: frontend-ns
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /bookings$1$2
-spec:
-  ingressClassName: nginx
-  rules:
-  - http:
-      paths:
-      - path: /api/bookings(/|$)(.*)
-        pathType: ImplementationSpecific
+      - path: /api/bookings
+        pathType: Prefix
         backend:
           service:
             name: booking-service
             port:
               number: 8084
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: cinema-ingress-frontend
-  namespace: frontend-ns
-spec:
-  ingressClassName: nginx
-  rules:
-  - http:
-      paths:
       - path: /
         pathType: Prefix
         backend:
