@@ -1,10 +1,10 @@
-# Podręcznik instalacji i uruchomienia aplikacji w Minikube (SETUP.md)
+# Podręcznik instalacji i uruchomienia aplikacji w Minikube
 
-Ten przewodnik krok po kroku opisuje sposób konfigurowania, wdrażania oraz testowania rozproszonego systemu rezerwacji kinowych (**Cinema System**) w środowisku Kubernetes za pomocą narzędzia **Minikube** z wykorzystaniem gotowych obrazów z rejestru **Docker Hub** (wersja `1.0.3`).
+Ten przewodnik krok po kroku opisuje sposób konfigurowania, wdrażania oraz testowania rozproszonego systemu rezerwacji kinowych **Cinema System** w środowisku Kubernetes za pomocą narzędzia **Minikube** z wykorzystaniem gotowych obrazów z rejestru **Docker Hub** (wersja `1.0.3`).
 
 ---
 
-## 1. Wymagania wstępne (Prerequisites)
+## 1. Wymagania wstępne
 
 Przed przystąpieniem do instalacji upewnij się, że na systemie lokalnym zainstalowane są następujące narzędzia:
 - **Minikube** (v1.30.0 lub nowszy)

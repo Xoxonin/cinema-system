@@ -33,7 +33,7 @@ Wykorzystując CNI **Cilium**, wdrożono rygorystyczny model bezpieczeństwa sie
 
 ```mermaid
 graph TD
-    IngressController[Ingress Controller / Internet] -->|Port 80/8080| Frontend[frontend-ns: frontend]
+    IngressController[Ingress Controller / Internet - Port 80 / 443] -->|Port 80/8080| Frontend[frontend-ns: frontend]
     Frontend -->|Port 8081-8084| ExternalNames[frontend-ns: ExternalName Services]
     ExternalNames -->|Port 8081-8084| Backends[backend-ns: Go Microservices]
     Backends -->|Port 5432| Databases[backend-ns: PostgreSQL StatefulSets]
