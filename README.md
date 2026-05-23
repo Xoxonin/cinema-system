@@ -242,6 +242,8 @@ Dobór odpowiednich kontrolerów w Kubernetes ma fundamentalne znaczenie dla odp
     Bazy danych przechowują stan systemu. Stosowanie zwykłego `Deployment` groziłoby uszkodzeniem danych z powodu braku gwarancji kolejności uruchamiania i tożsamości sieciowej podów. Zastosowano kontroler `StatefulSet` z **1 repliką** dla każdej bazy danych, co zapewnia:
     *   **Unikalna tożsamość:** Każdy pod bazy danych otrzymuje stałą nazwę (np. `db-users-0`) i stały dysk, który nie zmienia się przy restartach.
     *   **volumeClaimTemplates:** Umożliwia stabilne, automatyczne powiązanie każdego podu ze swoim dedykowanym wolumenem PersistentVolume.
+*   **DaemonSet (Uzasadnienie braku wyboru):**
+    Kontroler `DaemonSet` uruchamia dokładnie jedną replikę poda na każdym węźle klastra. Jest on idealny dla agentów systemowych, takich jak Cilium CNI, zbieranie logów (Fluentd) czy monitoring (Prometheus Node Exporter). Ponieważ poszczególne mikroserwisy biznesowe powinny być dynamicznie harmonogramowane i skalowane przez Kubernetes w zależności od rzeczywistego obciążenia (a nie uruchamiane "na sztywno" na każdym fizycznym węźle bez względu na zasoby), **celowo nie wybrano kontrolera DaemonSet** dla żadnego z komponentów aplikacji.
 
 ---
 
@@ -269,6 +271,8 @@ Kierowanie ruchem publicznym HTTP z zewnątrz klastra realizowane jest przez dek
     *   Ścieżka `/` -> Usługa `frontend` (serwująca pliki statyczne HTML/JS)
 *   **Mapowanie Cross-Namespace (`ExternalName`):**
     Ponieważ Ingress może kierować ruch tylko do usług w tej samej przestrzeni nazw (`frontend-ns`), wdrożono wzorzec usług `ExternalName`. W `frontend-ns` utworzono usługi o identycznych nazwach jak te w backendzie, które przy zapytaniu zwracają rekord CNAME wskazujący na pełny adres mikrousługi w przestrzeni `backend-ns`. Dzięki temu routing na poziomie Ingress działa bezbłędnie i bez konieczności duplikowania podów.
+*   **Ingress vs LoadBalancer / Gateway API (Uzasadnienie wyboru):**
+    Wybrano mechanizm `Ingress` z kontrolerem `ingress-nginx` zamiast oddzielnych usług typu `LoadBalancer` dla każdego mikroserwisu. Usługa `LoadBalancer` tworzy osobny publiczny adres IP dla każdego serwisu (co w środowiskach chmurowych/wielowęzłowych generuje wysokie koszty i komplikuje zarządzanie). `Ingress` pozwala na skonsolidowanie całego ruchu pod **jednym publicznym adresem IP** i inteligentne trasowanie na podstawie ścieżek URL (path-based routing), co jest optymalne kosztowo i operacyjnie. Nowy standard `Gateway API` pominięto z uwagi na dodatkowy narzut konfiguracyjny (standard Ingress jest w pełni wystarczający i sprawdzony dla tej architektury).
 
 ---
 
@@ -282,6 +286,8 @@ Aby bazy danych PostgreSQL nie traciły danych podczas restartu podów, zaprojek
     Dla każdej bazy danych zdefiniowano obiekt `PersistentVolume` z typem `local`, kierujący na fizyczny katalog na węźle `minikube` (np. `/mnt/data/db-users`). Zapewnia to maksymalną wydajność I/O (brak narzutu sieciowych dysków rozproszonych).
 *   **PersistentVolumeClaim (PVC):**
     Generowane automatycznie z sekcji `volumeClaimTemplates` w specyfikacji `StatefulSet`. Gwarantuje to stałe, jednoznaczne powiązanie podu bazy danych ze swoim fizycznym dyskiem na konkretnym węźle.
+*   **Blokada Wolumenów (`claimRef`):**
+    Wszystkie cztery manifesty `PersistentVolume` zawierają sekcję `claimRef` wskazującą na konkretne roszczenie (PVC) w określonym namespace. To kluczowe zabezpieczenie chroni przed domyślnym, zachłannym przypisywaniem wolumenów lokalnych o tym samym rozmiarze do przypadkowych baz danych podczas restartu (np. sytuacja, w której baza użytkowników omyłkowo mountuje wolumen z danymi seansów kinowych).
 
 ---
 
@@ -293,4 +299,57 @@ Zgodnie z dobrymi praktykami 12-Factor App, oddzielono konfigurację aplikacji o
     Użyte do przechowywania plików migracji bazy danych `.sql` (np. `user-db-migrations`). Pliki te są deklaratywnie zapisane jako dane w obiekcie ConfigMap i montowane w kontenerach startowych (`initContainers`) jako wolumen w trybie tylko do odczytu, co umożliwia bezproblemowe przeprowadzenie migracji przy uruchomieniu aplikacji.
 *   **Secrets (Dane wrażliwe):**
     Wszystkie hasła do baz danych, tokeny JWT (`JWT_SECRET`) oraz pełne parametry połączeń (`DATABASE_URL`) zostały odseparowane i wstrzyknięte poprzez obiekty typu `Secret`. Aplikacje Go pobierają je jako zmiennes środowiskowe zreferowane bezpośrednio w plikach wdrożeń (Deployment/StatefulSet), dzięki czemu hasła nigdy nie pojawiają się w repozytorium kodu.
+
+---
+
+### 7. Sondy kondycji i gotowości (Liveness & Readiness Probes)
+
+Dla wszystkich pięciu mikroserwisów wdrożono mechanizmy samoleczenia (Self-healing) na poziomie kontenerów w celu automatycznej detekcji stanów zawieszenia oraz zapewnienia stabilności działania:
+
+*   **Sonda Kondycji (Liveness Probe):**
+    *   **Zastosowanie:** Zdefiniowana dla wszystkich aplikacji Go (porty `8081-8084`, ścieżka `/health`) oraz serwera Nginx frontendu.
+    *   **Parametry:** `initialDelaySeconds: 10`, `periodSeconds: 10`.
+    *   **Uzasadnienie:** Sonda cyklicznie odpytuje kontener. Jeśli aplikacja ulegnie zakleszczeniu (deadlock) lub wewnętrznej awarii, która uniemożliwi obsługę zapytań HTTP, Kubernetes automatycznie zrestartuje kontener, przywracając działanie usługi bez interwencji administratora.
+*   **Sonda Gotowości (Readiness Probe):**
+    *   **Zastosowanie:** Zdefiniowana dla aplikacji oraz frontendu (porty `8081-8084`, ścieżka `/health`).
+    *   **Parametry:** `initialDelaySeconds: 5`, `periodSeconds: 5`.
+    *   **Uzasadnienie:** Gwarantuje, że nowy pod nie otrzyma ruchu sieciowego od użytkowników przed pełnym zakończeniem inicjalizacji (np. zanim nawiąże stabilne połączenie z bazą danych i wczyta konfigurację). Jest to kluczowy element bezprzestojowego wdrażania (`RollingUpdate`) – stary pod jest wyłączany dopiero wtedy, gdy nowo utworzony pod zgłosi pełną gotowość.
+
+---
+
+### 8. Polityki sieciowe (Network Policies & Cilium CNI)
+
+Zamiast domyślnej płaskiej sieci Kubernetes, wdrożono rygorystyczny, deklaratywny model bezpieczeństwa sieciowego z zasadą "Deny-by-Default" przy użyciu **CNI Cilium (eBPF)**:
+
+*   **Domyślna odmowa (`default-deny-backend` / `default-deny-frontend`):**
+    Całkowicie blokuje jakikolwiek nieautoryzowany ruch wejściowy i wyjściowy w klastrze dla obu przestrzeni nazw.
+*   **Granularne zezwolenia:**
+    *   **`allow-frontend`**: Zezwala na ruch przychodzący do frontendu na port 8080 (z Ingressa) oraz ruch wychodzący do DNS oraz mikrousług backendu na porty API (`8081-8084`).
+    *   **`allow-backends`**: Zezwala na ruch wejściowy wyłącznie z przestrzeni `frontend-ns` oraz od **Ingress Controllera** (`ingress-nginx` / `kube-system`), zabezpieczając API i odcinając niepowołane podmioty klastra. Zezwala również na wyjście do DNS i baz danych.
+    *   **`allow-databases`**: Blokuje jakikolwiek ruch wyjściowy (pełna ochrona przed wyciekiem danych) i przyjmuje ruch na porcie `5432` **wyłącznie** od odpowiadającego mu podu mikrousługi (np. `db-catalog` przyjmuje połączenia tylko z `catalog-service`).
+
+---
+
+### 9. Limity i przydziały zasobów (Resource Quotas & Limit Ranges)
+
+Wdrożono zaawansowaną kontrolę zasobów fizycznych węzłów, chroniąc klaster przed przeciążeniem i atakami typu Denial of Service:
+
+*   **LimitRange (`backend-limit-range`):**
+    Definiuje domyślne żądania (`requests`) oraz limity (`limits`) dla CPU i pamięci RAM dla każdego kontenera, który sam ich nie określił, standaryzując środowisko uruchomieniowe.
+*   **ResourceQuota (`backend-quota`):**
+    Maksymalny sumaryczny "sufit" zasobów dla całej przestrzeni nazw. Zapobiega to przejęciu całości pamięci węzła przez jedną przestrzeń nazw (np. w przypadku niekontrolowanego autoskalowania HPA lub wycieku pamięci).
+*   **Limity dla `db-migration`:**
+    Aby uniknąć odrzucenia podów w środowiskach o rygorystycznych limitach ResourceQuota (np. gdy lokalne Minikube ma nieaktywny lub powolny mechanizm mutacji `LimitRange`), do kontenerów startowych `db-migration` dodano **jawne, niskie definicje zasobów** (50m CPU, 32Mi RAM), gwarantując bezbłędny start aplikacji w każdych warunkach.
+
+---
+
+### 10. Reguły planowania podów (Pod Affinity & Anti-Affinity)
+
+Wykorzystano zaawansowane reguły harmonogramowania Kubernetes w celu optymalizacji wydajności sieciowej i odporności na awarie sprzętowe:
+
+*   **Wysoka dostępność (Pod Anti-Affinity):**
+    Wdrożona dla bezstanowych podów aplikacji w Go (np. `user-service`) z kluczem topologii `kubernetes.io/hostname`. Wymusza ona na planiście (Scheduler) rozłożenie replik tej samej usługi na **różnych węzłach fizycznych** (serwerach VM). W przypadku awarii jednego serwera Proxmox, druga replika wciąż działa na sprawnym węźle.
+*   **Optymalizacja opóźnień (Pod Affinity):**
+    Aplikacja Go intensywnie odpytuje swoją bazę danych PostgreSQL. Wdrożono regułę powinowactwa, która sugeruje planiście umieszczenie podu mikrousługi (np. `user-service`) na **tym samym fizycznym węźle**, na którym działa jej baza danych (np. `db-users-0`). Komunikacja odbywa się wtedy lokalnie (loopback/localhost), co eliminuje opóźnienia sieciowe związane z przesyłaniem pakietów między serwerami fizycznymi.
+
 
