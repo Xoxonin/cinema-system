@@ -11,9 +11,10 @@ Prawidłowe zarządzanie zasobami (CPU oraz RAM) na poziomie kontenerów jest kl
 W tym celu wdrożono trójwarstwową strategię kontroli zasobów:
 
 ### A. Definicje na poziomie kontenera (`resources.requests` i `resources.limits`)
-W każdym z naszych podów (np. `user-service`, `booking-service` itp.) zdefiniowano:
+W każdym z wdrożonych podów (np. `user-service`, `booking-service` itp.) zdefiniowano precyzyjne parametry zasobów:
 *   **Requests (Żądania):** Minimalna gwarantowana ilość CPU i pamięci, którą Kubernetes rezerwuje dla kontenera na węźle podczas planowania. Zapewnia to stabilność działania aplikacji w warunkach normalnego obciążenia.
 *   **Limits (Limity):** Nieprzekraczalny próg zużycia zasobów. Jeśli kontener spróbuje zużyć więcej pamięci RAM niż wynosi limit, zostanie natychmiast zrestartowany z błędem `OOMKilled`. Zużycie CPU powyżej limitu będzie dławione (throttling), co chroni inne aplikacje przed "zagłodzeniem".
+*   **Jawne zasoby dla kontenerów startowych (`db-migration`):** Kontenery startowe wykonujące migracje schematów baz danych posiadają jawnie przydzielone minimalne zasoby (50m CPU, 32Mi RAM żądania oraz 100m CPU, 64Mi RAM limitu). Zapobiega to zablokowaniu i odrzuceniu podów przez obiekt `ResourceQuota` w rygorystycznych środowiskach (np. na Minikube, gdzie kontroler mutacji `LimitRange` może działać z opóźnieniem lub być nieaktywny).
 
 ### B. Domyślne wartości na poziomie przestrzeni nazw (`LimitRange`)
 W przestrzeniach `frontend-ns` oraz `backend-ns` wdrożono obiekt typu `LimitRange`. Pełni on dwie funkcje:
@@ -49,16 +50,16 @@ graph TD
 Wdrożono izolację poprzez manifesty `default-deny-frontend` oraz `default-deny-backend`. Reguły te selekcjonują wszystkie pody w danej przestrzeni (`podSelector: {}`) i blokują jakikolwiek nieautoryzowany ruch wejściowy (Ingress) oraz wyjściowy (Egress).
 
 ### B. Precyzyjne zezwalanie na komunikację (Granular Allow Rules)
-Stworzono dedykowane polisy zezwalające na ściśle zdefiniowane połączenia:
+Stworzono dedykowane polisy sieciowe zezwalające na ściśle zdefiniowane połączenia:
 1.  **Frontend (`allow-frontend`):**
-    *   *Ingress:* Zezwala na ruch przychodzący wyłącznie na port `8080` (np. z Ingress Controllera lub NodePort).
+    *   *Ingress:* Zezwala na ruch przychodzący wyłącznie na port `8080` (np. z Ingress Controllera lub usługi NodePort).
     *   *Egress:* Zezwala na ruch wyjściowy na serwer CoreDNS (`kube-system` port 53) w celu rozwiązywania nazw oraz ruch wyjściowy do przestrzeni `backend-ns` wyłącznie na porty API (`8081`, `8082`, `8083`, `8084`).
 2.  **Mikrousługi Go (`allow-backends`):**
-    *   *Ingress:* Zezwala na ruch wejściowy wyłącznie z przestrzeni `frontend-ns` na przypisane porty aplikacji.
-    *   *Egress:* Zezwala na ruch wyjściowy do DNS oraz wyjściowy do baz danych PostgreSQL w tej samej przestrzeni (port `5432`).
+    *   *Ingress (Ruch wejściowy):* Zezwala na ruch przychodzący z przestrzeni `frontend-ns` (ruch od poda frontendu) oraz z przestrzeni adresowych kontrolera Ingress (`ingress-nginx` oraz `kube-system`). Zapewnia to bezbłędną i bezpieczną realizację trasowania publicznego API `/api/...` bezpośrednio przez kontroler Ingress bez ryzyka zablokowania ruchu i wystąpienia błędu `504 Gateway Timeout`.
+    *   *Egress (Ruch wyjściowy):* Zezwala na ruch wyjściowy do DNS oraz wyjściowy do baz danych PostgreSQL w tej samej przestrzeni (`backend-ns`) wyłącznie na port `5432`.
 3.  **Bazy danych (`allow-databases`):**
-    *   *Ingress:* Zezwala na ruch na porcie `5432` **wyłącznie** od odpowiadającego podu aplikacji (np. `db-users` przyjmuje zapytania tylko z `user-service`).
-    *   *Egress:* Pełna blokada ruchu wychodzącego. Baza danych nie potrzebuje inicjować żadnych połączeń zewnętrznych, co eliminuje ryzyko eksfiltracji danych w przypadku przejęcia bazy.
+    *   *Ingress:* Zezwala na ruch na porcie `5432` **wyłącznie** od odpowiadającego podu aplikacji w tej samej przestrzeni (np. `db-users` przyjmuje zapytania tylko z `user-service`).
+    *   *Egress:* Pełna blokada ruchu wychodzącego. Baza danych nie potrzebuje inicjować żadnych połączeń zewnętrznych, co eliminuje ryzyko nieautoryzowanego przesyłania i eksfiltracji danych na zewnątrz klastra w przypadku naruszenia bezpieczeństwa bazy.
 
 ---
 
