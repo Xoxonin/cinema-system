@@ -212,7 +212,7 @@ graph TD
     style DbBooking fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4,stroke-width:2px
 ```
 
-Szczegółowy opis techniczny zaawansowanych mechanizmów bezpieczeństwa, limitów oraz reguł orkiestracji znajduje się również w dedykowanym pliku: **bezpieczenstwo_i_mechanizmy.md**
+Szczegółowy opis techniczny zaawansowanych mechanizmów bezpieczeństwa, limitów oraz reguł orkiestracji znajduje się również w dedykowanym pliku: **DODATKOWE.md**
 
 ---
 
@@ -316,26 +316,10 @@ Dla wszystkich pięciu mikroserwisów wdrożono mechanizmy samoleczenia (Self-he
     *   **Parametry:** `initialDelaySeconds: 5`, `periodSeconds: 5`.
     *   **Uzasadnienie:** Gwarantuje, że nowy pod nie otrzyma ruchu sieciowego od użytkowników przed pełnym zakończeniem inicjalizacji (np. zanim nawiąże stabilne połączenie z bazą danych i wczyta konfigurację). Jest to kluczowy element bezprzestojowego wdrażania (`RollingUpdate`) – stary pod jest wyłączany dopiero wtedy, gdy nowo utworzony pod zgłosi pełną gotowość.
 
-### 8. Polityki sieciowe (Network Policies & Cilium CNI)
-
-Zamiast domyślnej płaskiej sieci Kubernetes, wdrożono rygorystyczny, deklaratywny model bezpieczeństwa sieciowego z zasadą "Deny-by-Default" przy użyciu **CNI Cilium (eBPF)**. 
-
-Szczegółowy opis wdrożonych reguł wejściowych/wyjściowych, ich celów sieciowych oraz sposobu integracji kontrolera Ingress znajduje się w pliku: [bezpieczenstwo_i_mechanizmy.md](bezpieczenstwo_i_mechanizmy.md#2-polityka-sieciowa-networkpolicy-i-cni-cilium).
-
----
-
-### 9. Limity i przydziały zasobów (Resource Quotas & Limit Ranges)
-
-Wdrożono zaawansowaną kontrolę zasobów fizycznych węzłów (CPU oraz RAM), chroniąc klaster przed przeciążeniem, niekontrolowanym autoskalowaniem i atakami typu Denial of Service.
-
-Szczegółowy opis strategii trójwarstwowej (`LimitRange`, `ResourceQuota` oraz jawnych zasobów dla kontenerów startowych) znajduje się w pliku: [bezpieczenstwo_i_mechanizmy.md](bezpieczenstwo_i_mechanizmy.md#1-ograniczenie-wykorzystywanych-zasobow-zasoby-i-limity).
-
----
-
-### 10. Reguły planowania podów (Pod Affinity & Anti-Affinity)
-
-Wykorzystano zaawansowane reguły harmonogramowania Kubernetes w celu optymalizacji wydajności sieciowej (spójność bazy i backendu na jednym serwerze) oraz odporności na awarie sprzętowe.
-
-Szczegółowy opis działania oraz parametrów reguł *Pod Affinity* i *Pod Anti-Affinity* znajduje się w pliku: [bezpieczenstwo_i_mechanizmy.md](bezpieczenstwo_i_mechanizmy.md#3-mechanizmy-sterujace-planowaniem-affinity--anti-affinity).
+### Dodatkowe mechanizmy
+Konfiguracja 
+- **Polityki sieciowej**
+- **Limitów i przydziałów zasobów**
+- **Reguł planowania podów (Pod Affinity & Anti-Affinity)**
 
 
