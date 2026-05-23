@@ -16,13 +16,20 @@ Przed przystąpieniem do instalacji upewnij się, że na systemie lokalnym zains
 
 ## 2. Inicjalizacja klastra (opcjonalnie dla Minikube)
 
-Jeśli wdrażasz aplikację lokalnie na Minikube, uruchom klaster przy użyciu sterownika Docker:
+Jeśli wdrażasz aplikację lokalnie na Minikube, uruchom lokalny klaster przy użyciu sterownika Docker:
 
 ```bash
 minikube start --driver=docker
 ```
 
-Upewnij się, że klaster działa poprawnie:
+> [!IMPORTANT]
+> **Włączenie dodatku Ingress w Minikube:**
+> Aby Kubernetes mógł obsłużyć trasowanie ruchu HTTP przez bramę Ingress, musisz **koniecznie włączyć oficjalny dodatek kontrolera Ingress na Minikube**:
+> ```bash
+> minikube addons enable ingress
+> ```
+
+Upewnij się, że klaster oraz dodatek działają poprawnie:
 
 ```bash
 minikube status
