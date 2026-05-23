@@ -53,9 +53,9 @@ func main() {
 	queries = db.New(dbConn)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /register", registerHandler)
-	mux.HandleFunc("POST /login", loginHandler)
-	mux.HandleFunc("GET /profile", profileHandler)
+	mux.HandleFunc("POST /api/users/register", registerHandler)
+	mux.HandleFunc("POST /api/users/login", loginHandler)
+	mux.HandleFunc("GET /api/users/profile", profileHandler)
 	mux.HandleFunc("GET /health", healthHandler)
 
 	log.Println("User Service starting on port 8081")

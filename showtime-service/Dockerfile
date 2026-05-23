@@ -12,18 +12,10 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
 # Final stage
-FROM alpine:3.23@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659
-
-# Update and upgrade packages to avoid vulnerabilities
-RUN apk update && \
-    apk upgrade --no-cache && \
-    rm -rf /var/cache/apk/*
-
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
+FROM gcr.io/distroless/static-debian12:nonroot
 
 WORKDIR /app
 COPY --from=builder /app/main .
 
 EXPOSE 8083
-CMD ["./main"]
+CMD ["/app/main"]

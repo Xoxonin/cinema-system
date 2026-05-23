@@ -45,9 +45,9 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthHandler)
-	mux.HandleFunc("GET /bookings", listBookingsHandler)
-	mux.HandleFunc("POST /bookings/lock", lockSeatHandler)
-	mux.HandleFunc("POST /bookings/confirm", confirmBookingHandler)
+	mux.HandleFunc("GET /api/bookings", listBookingsHandler)
+	mux.HandleFunc("POST /api/bookings/lock", lockSeatHandler)
+	mux.HandleFunc("POST /api/bookings/confirm", confirmBookingHandler)
 
 	log.Println("Booking Service starting on port 8084")
 	log.Fatal(http.ListenAndServe(":8084", mux))

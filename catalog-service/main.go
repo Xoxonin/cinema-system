@@ -38,9 +38,9 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthHandler)
-	mux.HandleFunc("GET /movies", listMoviesHandler)
-	mux.HandleFunc("GET /movies/{id}", getMovieHandler)
-	mux.HandleFunc("POST /movies", createMovieHandler)
+	mux.HandleFunc("GET /api/movies", listMoviesHandler)
+	mux.HandleFunc("GET /api/movies/{id}", getMovieHandler)
+	mux.HandleFunc("POST /api/movies", createMovieHandler)
 
 	log.Println("Catalog Service starting on port 8082")
 	log.Fatal(http.ListenAndServe(":8082", mux))
