@@ -24,12 +24,12 @@ minikube start --driver=docker
 
 > [!IMPORTANT]
 > **Włączenie dodatku Ingress w Minikube:**
-> Aby Kubernetes mógł obsłużyć trasowanie ruchu HTTP przez bramę Ingress, musisz **koniecznie włączyć oficjalny dodatek kontrolera Ingress na Minikube**:
+> Aby Kubernetes mógł obsłużyć trasowanie ruchu HTTP przez bramę Ingress, należy **koniecznie włączyć oficjalny dodatek kontrolera Ingress na Minikube**:
 > ```bash
 > minikube addons enable ingress
 > ```
 
-Upewnij się, że klaster oraz dodatek działają poprawnie:
+Upewnić się, czy klaster oraz dodatek działają poprawnie:
 
 ```bash
 minikube status
@@ -40,9 +40,9 @@ kubectl get nodes
 
 ## 3. Konfiguracja Wolumenów Pamięci i Uprawnień
 
-Nasza architektura korzysta z wolumenów typu `PersistentVolume` z mapowaniem ścieżek fizycznych (`local-storage` na węźle klastra). Pliki PV są zabezpieczone klauzulą **`claimRef`**, co gwarantuje, że dany wolumen powiąże się **wyłącznie** ze swoją dedykowaną bazą danych (zapobiega to losowemu mieszaniu baz).
+Opracowana architektura korzysta z wolumenów typu `PersistentVolume` z mapowaniem ścieżek fizycznych (`local-storage` na węźle klastra). Pliki PV są zabezpieczone klauzulą **`claimRef`**, co gwarantuje, że dany wolumen powiąże się **wyłącznie** ze swoją dedykowaną bazą danych (zapobiega to losowemu mieszaniu baz).
 
-Ponieważ kontenery bazodanowe są utwardzone i działają jako użytkownik nieuprzywilejowany (`runAsUser: 999`), a **PostgreSQL wymaga rygorystycznych zabezpieczeń katalogu danych (uprawnienia 700)**, musisz utworzyć katalogi i nadać im odpowiedniego właściciela oraz uprawnienia na węźle, na którym działa baza danych.
+Ponieważ kontenery bazodanowe są utwardzone i działają jako użytkownik nieuprzywilejowany (`runAsUser: 999`), a **PostgreSQL wymaga rygorystycznych zabezpieczeń katalogu danych (uprawnienia 700)**, należy utworzyć katalogi i nadać im odpowiedniego właściciela oraz uprawnienia na węźle, na którym działa baza danych.
 
 ### Opcja A: Wdrożenie na Minikube (Lokalnie)
 Wykonaj poniższe polecenie SSH bezpośrednio na maszynie wirtualnej Minikube:
@@ -87,9 +87,9 @@ minikube image pull adamad7/frontend:1.0.4
 
 ## 5. Wdrożenie manifestów Kubernetes (Kolejność ma znaczenie!)
 
-Wdrożenie komponentów musi przebiegać sekwencyjnie. Nasze aplikacje mają zdefiniowane **jawne limity zasobów dla kontenerów startowych `db-migration`**, co gwarantuje pełną zgodność z rygorystycznymi politykami `ResourceQuota` (np. na Minikube z wyłączonym kontrolerem `LimitRange`).
+Wdrożenie komponentów musi przebiegać sekwencyjnie. Aplikacje mają zdefiniowane **jawne limity zasobów dla kontenerów startowych `db-migration`**, co gwarantuje pełną zgodność z rygorystycznymi politykami `ResourceQuota` (np. na Minikube z wyłączonym kontrolerem `LimitRange`).
 
-Uruchom poniższe polecenia po kolei:
+Uruchomić poniższe polecenia po kolei:
 
 ```bash
 # 1. Tworzenie przestrzeni nazw i limitów zasobów (Quota, LimitRange)
@@ -133,47 +133,47 @@ kubectl apply -f k8s/ingress/
 
 ## 6. Weryfikacja uruchomienia i Dostęp do Aplikacji
 
-Sprawdź stan podów we wszystkich przestrzeniach nazw:
+Zweryfikować stan podów we wszystkich przestrzeniach nazw:
 ```bash
 kubectl get pods -A
 ```
 Wszystkie pody powinny mieć status `Running` i stan `Ready` (np. `1/1` lub `2/2`).
 
 ### Dostęp przez Ingress na Minikube (Lokalnie)
-Nasz Ingress nie posiada ograniczeń domenowych (`host`), co ułatwia testowanie lokalne. Sposób połączenia zależy jednak od Twojego systemu operacyjnego:
+Ingress nie posiada ograniczeń domenowych (`host`), co ułatwia testowanie lokalne. Sposób połączenia zależy od używanego systemu operacyjnego:
 
 #### A. Systemy Linux (Direct Route)
 Na systemach Linux wirtualna sieć Minikube jest bezpośrednio trasowana przez hosta:
-1. Pobierz IP Minikube:
+1. Pobrać IP Minikube:
    ```bash
    minikube ip
    ```
-2. Otwórz przeglądarkę i wejdź na: `http://<ADRES_IP_MINIKUBE>/` (np. `http://192.168.49.2/`).
+2. Otworzyć przeglądarkę i wejść na: `http://<ADRES_IP_MINIKUBE>/` (np. `http://192.168.49.2/`).
 
 #### B. Systemy Windows 11 i macOS (WSL2 / Docker Network Isolation)
-Na systemach Windows oraz macOS wirtualna sieć Minikube działa w izolowanym kontenerze Docker/WSL2 i jej adres IP nie jest bezpośrednio osiągalny z systemu operacyjnego. Aby to naprawić, musisz utworzyć tunel sieciowy:
-1. Otwórz **nowe, osobne okno terminala** (PowerShell / Command Prompt) jako **Administrator** (na Windowsie) lub z uprawnieniami `sudo` (na macOS).
-2. Uruchom narzędzie tunelujące:
+Na systemach Windows oraz macOS wirtualna sieć Minikube działa w izolowanym kontenerze Docker/WSL2 i jej adres IP nie jest bezpośrednio osiągalny z systemu operacyjnego. Aby to naprawić, należy utworzyć tunel sieciowy:
+1. Otworzyć **nowe, osobne okno terminala** (PowerShell / Command Prompt) jako **Administrator** (na Windowsie) lub z uprawnieniami `sudo` (na macOS).
+2. Uruchomić narzędzie tunelujące:
    ```bash
    minikube tunnel
    ```
-3. Zostaw to okno uruchomione w tle! Tunel powiąże ruch sieciowy i przekieruje go do klastra.
-4. Otwórz przeglądarkę i wejdź na lokalny adres: `http://localhost/` lub `http://127.0.0.1/`.
+3. Zostawić to okno uruchomione w tle! Tunel powiąże ruch sieciowy i przekieruje go do klastra.
+4. Otworzyć przeglądarkę i wejść na lokalny adres: `http://localhost/` lub `http://127.0.0.1/`.
 
 ### Dostęp na klastrze K3s / Proxmox
-Dostęp odbywa się poprzez wystawiony kontroler Ingress i skonfigurowany tunel Cloudflare pod Twoją domeną (np. `https://cinema.mazadonia.cc/`). Dzięki regułom w `allow-backends.yaml`, kontroler Ingress działający w `ingress-nginx`/`kube-system` bez problemu prześle zapytania `/api/...` bezpośrednio do usług backendowych (brak błędu 504 Gateway Timeout).
+Dostęp odbywa się poprzez wystawiony kontroler Ingress i skonfigurowany tunel Cloudflare pod wybraną domeną (np. `https://cinema.example.com/`). Dzięki regułom w `allow-backends.yaml`, kontroler Ingress działający w `ingress-nginx`/`kube-system` bez problemu prześle zapytania `/api/...` bezpośrednio do usług backendowych (brak błędu 504 Gateway Timeout).
 
 ---
 
 ## 7. Scenariusze testowe i polecenia weryfikacji API
 
-Skonfiguruj zmienną środowiskową `APP_URL` wskazującą na adres aplikacji:
-- **Linux (Minikube):** `export APP_URL="http://192.168.49.2"` (zamień na IP z `minikube ip`)
+Skonfigurować zmienną środowiskową `APP_URL` wskazującą na adres aplikacji:
+- **Linux (Minikube):** `export APP_URL="http://192.168.49.2"` (zamienić na IP z `minikube ip`)
 - **Windows / macOS (Minikube):** `export APP_URL="http://localhost"`
-- **Klaster Proxmox (Prod):** `export APP_URL="https://cinema.mazadonia.cc"`
+- **Klaster Proxmox (Prod):** `export APP_URL="https://cinema.example.com"`
 
 ```bash
-export APP_URL="http://localhost" # zamień na właściwy adres dla Twojego systemu/środowiska
+export APP_URL="http://localhost" # zamienić na właściwy adres dla danego systemu/środowiska
 ```
 
 ### Scenariusz 1: Pobranie listy filmów (Catalog Service)
