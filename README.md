@@ -315,41 +315,26 @@ Dla wszystkich pięciu mikroserwisów wdrożono mechanizmy samoleczenia (Self-he
     *   **Parametry:** `initialDelaySeconds: 5`, `periodSeconds: 5`.
     *   **Uzasadnienie:** Gwarantuje, że nowy pod nie otrzyma ruchu sieciowego od użytkowników przed pełnym zakończeniem inicjalizacji (np. zanim nawiąże stabilne połączenie z bazą danych i wczyta konfigurację). Jest to kluczowy element bezprzestojowego wdrażania (`RollingUpdate`) – stary pod jest wyłączany dopiero wtedy, gdy nowo utworzony pod zgłosi pełną gotowość.
 
----
-
 ### 8. Polityki sieciowe (Network Policies & Cilium CNI)
 
-Zamiast domyślnej płaskiej sieci Kubernetes, wdrożono rygorystyczny, deklaratywny model bezpieczeństwa sieciowego z zasadą "Deny-by-Default" przy użyciu **CNI Cilium (eBPF)**:
+Zamiast domyślnej płaskiej sieci Kubernetes, wdrożono rygorystyczny, deklaratywny model bezpieczeństwa sieciowego z zasadą "Deny-by-Default" przy użyciu **CNI Cilium (eBPF)**. 
 
-*   **Domyślna odmowa (`default-deny-backend` / `default-deny-frontend`):**
-    Całkowicie blokuje jakikolwiek nieautoryzowany ruch wejściowy i wyjściowy w klastrze dla obu przestrzeni nazw.
-*   **Granularne zezwolenia:**
-    *   **`allow-frontend`**: Zezwala na ruch przychodzący do frontendu na port 8080 (z Ingressa) oraz ruch wychodzący do DNS oraz mikrousług backendu na porty API (`8081-8084`).
-    *   **`allow-backends`**: Zezwala na ruch wejściowy wyłącznie z przestrzeni `frontend-ns` oraz od **Ingress Controllera** (`ingress-nginx` / `kube-system`), zabezpieczając API i odcinając niepowołane podmioty klastra. Zezwala również na wyjście do DNS i baz danych.
-    *   **`allow-databases`**: Blokuje jakikolwiek ruch wyjściowy (pełna ochrona przed wyciekiem danych) i przyjmuje ruch na porcie `5432` **wyłącznie** od odpowiadającego mu podu mikrousługi (np. `db-catalog` przyjmuje połączenia tylko z `catalog-service`).
+Szczegółowy opis wdrożonych reguł wejściowych/wyjściowych, ich celów sieciowych oraz sposobu integracji kontrolera Ingress znajduje się w pliku: [bezpieczenstwo_i_mechanizmy.md](bezpieczenstwo_i_mechanizmy.md#2-polityka-sieciowa-networkpolicy-i-cni-cilium).
 
 ---
 
 ### 9. Limity i przydziały zasobów (Resource Quotas & Limit Ranges)
 
-Wdrożono zaawansowaną kontrolę zasobów fizycznych węzłów, chroniąc klaster przed przeciążeniem i atakami typu Denial of Service:
+Wdrożono zaawansowaną kontrolę zasobów fizycznych węzłów (CPU oraz RAM), chroniąc klaster przed przeciążeniem, niekontrolowanym autoskalowaniem i atakami typu Denial of Service.
 
-*   **LimitRange (`backend-limit-range`):**
-    Definiuje domyślne żądania (`requests`) oraz limity (`limits`) dla CPU i pamięci RAM dla każdego kontenera, który sam ich nie określił, standaryzując środowisko uruchomieniowe.
-*   **ResourceQuota (`backend-quota`):**
-    Maksymalny sumaryczny "sufit" zasobów dla całej przestrzeni nazw. Zapobiega to przejęciu całości pamięci węzła przez jedną przestrzeń nazw (np. w przypadku niekontrolowanego autoskalowania HPA lub wycieku pamięci).
-*   **Limity dla `db-migration`:**
-    Aby uniknąć odrzucenia podów w środowiskach o rygorystycznych limitach ResourceQuota (np. gdy lokalne Minikube ma nieaktywny lub powolny mechanizm mutacji `LimitRange`), do kontenerów startowych `db-migration` dodano **jawne, niskie definicje zasobów** (50m CPU, 32Mi RAM), gwarantując bezbłędny start aplikacji w każdych warunkach.
+Szczegółowy opis strategii trójwarstwowej (`LimitRange`, `ResourceQuota` oraz jawnych zasobów dla kontenerów startowych) znajduje się w pliku: [bezpieczenstwo_i_mechanizmy.md](bezpieczenstwo_i_mechanizmy.md#1-ograniczenie-wykorzystywanych-zasobow-zasoby-i-limity).
 
 ---
 
 ### 10. Reguły planowania podów (Pod Affinity & Anti-Affinity)
 
-Wykorzystano zaawansowane reguły harmonogramowania Kubernetes w celu optymalizacji wydajności sieciowej i odporności na awarie sprzętowe:
+Wykorzystano zaawansowane reguły harmonogramowania Kubernetes w celu optymalizacji wydajności sieciowej (spójność bazy i backendu na jednym serwerze) oraz odporności na awarie sprzętowe.
 
-*   **Wysoka dostępność (Pod Anti-Affinity):**
-    Wdrożona dla bezstanowych podów aplikacji w Go (np. `user-service`) z kluczem topologii `kubernetes.io/hostname`. Wymusza ona na planiście rozłożenie replik tej samej usługi na **różnych węzłach**. W przypadku awarii jednego węzła, druga replika wciąż działa na sprawnym węźle.
-*   **Optymalizacja opóźnień (Pod Affinity):**
-    Aplikacja Go intensywnie odpytuje swoją bazę danych PostgreSQL. Wdrożono regułę powinowactwa, która sugeruje planiście umieszczenie podu mikrousługi (np. `user-service`) na **tym samym fizycznym węźle**, na którym działa jej baza danych (np. `db-users-0`). Komunikacja odbywa się wtedy lokalnie (loopback/localhost), co eliminuje opóźnienia sieciowe związane z przesyłaniem pakietów między serwerami fizycznymi.
+Szczegółowy opis działania oraz parametrów reguł *Pod Affinity* i *Pod Anti-Affinity* znajduje się w pliku: [bezpieczenstwo_i_mechanizmy.md](bezpieczenstwo_i_mechanizmy.md#3-mechanizmy-sterujace-planowaniem-affinity--anti-affinity).
 
 
