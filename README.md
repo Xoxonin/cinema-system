@@ -298,7 +298,7 @@ Zgodnie z dobrymi praktykami 12-Factor App, oddzielono konfigurację aplikacji o
 *   **ConfigMaps (Konfiguracja jawna):**
     Użyte do przechowywania plików migracji bazy danych `.sql` (np. `user-db-migrations`). Pliki te są deklaratywnie zapisane jako dane w obiekcie ConfigMap i montowane w kontenerach startowych (`initContainers`) jako wolumen w trybie tylko do odczytu, co umożliwia bezproblemowe przeprowadzenie migracji przy uruchomieniu aplikacji.
 *   **Secrets (Dane wrażliwe):**
-    Wszystkie hasła do baz danych, tokeny JWT (`JWT_SECRET`) oraz pełne parametry połączeń (`DATABASE_URL`) zostały odseparowane i wstrzyknięte poprzez obiekty typu `Secret`. Aplikacje Go pobierają je jako zmiennes środowiskowe zreferowane bezpośrednio w plikach wdrożeń (Deployment/StatefulSet), dzięki czemu hasła nigdy nie pojawiają się w repozytorium kodu.
+    Wszystkie hasła do baz danych, tokeny JWT (`JWT_SECRET`) oraz pełne parametry połączeń (`DATABASE_URL`) zostały odseparowane i wstrzyknięte poprzez obiekty typu `Secret`. Aplikacje Go pobierają je jako zmiennes środowiskowe zreferowane bezpośrednio w plikach wdrożeń (Deployment/StatefulSet).
 
 ---
 
@@ -348,7 +348,7 @@ Wdrożono zaawansowaną kontrolę zasobów fizycznych węzłów, chroniąc klast
 Wykorzystano zaawansowane reguły harmonogramowania Kubernetes w celu optymalizacji wydajności sieciowej i odporności na awarie sprzętowe:
 
 *   **Wysoka dostępność (Pod Anti-Affinity):**
-    Wdrożona dla bezstanowych podów aplikacji w Go (np. `user-service`) z kluczem topologii `kubernetes.io/hostname`. Wymusza ona na planiście (Scheduler) rozłożenie replik tej samej usługi na **różnych węzłach fizycznych** (serwerach VM). W przypadku awarii jednego serwera Proxmox, druga replika wciąż działa na sprawnym węźle.
+    Wdrożona dla bezstanowych podów aplikacji w Go (np. `user-service`) z kluczem topologii `kubernetes.io/hostname`. Wymusza ona na planiście rozłożenie replik tej samej usługi na **różnych węzłach**. W przypadku awarii jednego węzła, druga replika wciąż działa na sprawnym węźle.
 *   **Optymalizacja opóźnień (Pod Affinity):**
     Aplikacja Go intensywnie odpytuje swoją bazę danych PostgreSQL. Wdrożono regułę powinowactwa, która sugeruje planiście umieszczenie podu mikrousługi (np. `user-service`) na **tym samym fizycznym węźle**, na którym działa jej baza danych (np. `db-users-0`). Komunikacja odbywa się wtedy lokalnie (loopback/localhost), co eliminuje opóźnienia sieciowe związane z przesyłaniem pakietów między serwerami fizycznymi.
 
