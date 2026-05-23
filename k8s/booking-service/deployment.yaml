@@ -65,6 +65,13 @@ spec:
         volumeMounts:
         - name: migration-dir
           mountPath: /migrations
+        resources:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
       containers:
       - name: booking-service
         image: adamad7/booking-service:1.0.4
