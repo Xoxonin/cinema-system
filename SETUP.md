@@ -1,28 +1,28 @@
-# Podręcznik instalacji i uruchomienia aplikacji w Minikube
+# Podręcznik instalacji i uruchomienia aplikacji w Minikube i K3s
 
-Ten przewodnik krok po kroku opisuje sposób konfigurowania, wdrażania oraz testowania rozproszonego systemu rezerwacji kinowych **Cinema System** w środowisku Kubernetes za pomocą narzędzia **Minikube** z wykorzystaniem gotowych obrazów z rejestru **Docker Hub** (wersja `1.0.3`).
+Ten przewodnik krok po kroku opisuje sposób konfigurowania, wdrażania oraz testowania rozproszonego systemu rezerwacji kinowych **Cinema System** w środowisku Kubernetes (lokalny **Minikube** lub klaster **K3s** na Proxmox) z wykorzystaniem obrazów w wersji `1.0.4`.
 
 ---
 
 ## 1. Wymagania wstępne
 
 Przed przystąpieniem do instalacji upewnij się, że na systemie lokalnym zainstalowane są następujące narzędzia:
-- **Minikube** (v1.30.0 lub nowszy)
+- **Minikube** (v1.30.0 lub nowszy) lub działający klaster **K3s/Kubernetes**
 - **kubectl** (skonfigurowany do obsługi klastra)
-- **Docker** (zainstalowany i uruchomiony lokalnie)
+- **Docker** (opcjonalnie, do lokalnych testów)
 - **curl** (do weryfikacji API)
 
 ---
 
-## 2. Inicjalizacja klastra Minikube
+## 2. Inicjalizacja klastra (opcjonalnie dla Minikube)
 
-Uruchom lokalny klaster Kubernetes przy użyciu sterownika Docker:
+Jeśli wdrażasz aplikację lokalnie na Minikube, uruchom klaster przy użyciu sterownika Docker:
 
 ```bash
 minikube start --driver=docker
 ```
 
-Upewnij się, że klaster działa poprawnie i węzeł jest gotowy:
+Upewnij się, że klaster działa poprawnie:
 
 ```bash
 minikube status
@@ -31,69 +31,73 @@ kubectl get nodes
 
 ---
 
-## 3. Konfiguracja Wolumenów Pamięci
+## 3. Konfiguracja Wolumenów Pamięci i Uprawnień
 
-Nasza architektura korzysta z wolumenów typu `PersistentVolume` z mapowaniem ścieżek fizycznych (`local-storage` na węźle klastra). 
+Nasza architektura korzysta z wolumenów typu `PersistentVolume` z mapowaniem ścieżek fizycznych (`local-storage` na węźle klastra). Pliki PV są zabezpieczone klauzulą **`claimRef`**, co gwarantuje, że dany wolumen powiąże się **wyłącznie** ze swoją dedykowaną bazą danych (zapobiega to losowemu mieszaniu baz).
 
-Ponieważ kontenery bazodanowe są utwardzone i działają jako użytkownik nieuprzywilejowany (`runAsUser: 999`), należy utworzyć odpowiednie katalogi oraz nadać im wymagane uprawnienia bezpośrednio na maszynie wirtualnej Minikube:
+Ponieważ kontenery bazodanowe są utwardzone i działają jako użytkownik nieuprzywilejowany (`runAsUser: 999`), a **PostgreSQL wymaga rygorystycznych zabezpieczeń katalogu danych (uprawnienia 700)**, musisz utworzyć katalogi i nadać im odpowiedniego właściciela oraz uprawnienia na węźle, na którym działa baza danych.
 
+### Opcja A: Wdrożenie na Minikube (Lokalnie)
+Wykonaj poniższe polecenie SSH bezpośrednio na maszynie wirtualnej Minikube:
 ```bash
-# Połączenie SSH z minikube w celu utworzenia katalogów i nadania uprawnień właściciela użytkownikowi o ID 999 (postgres)
-minikube ssh "sudo mkdir -p /mnt/data/db-users /mnt/data/db-catalog /mnt/data/db-showtime /mnt/data/db-booking && sudo chmod 777 /mnt/data/db-* && sudo chown -R 999:999 /mnt/data/db-*"
+minikube ssh "sudo mkdir -p /mnt/data/db-users /mnt/data/db-catalog /mnt/data/db-showtime /mnt/data/db-booking && sudo chown -R 999:999 /mnt/data/db-* && sudo chmod 700 /mnt/data/db-*"
 ```
+
+### Opcja B: Wdrożenie na klastrze K3s / Proxmox (Wielowęzłowym)
+Zaloguj się na węzeł docelowy (np. `node-1`, na który wskazuje `nodeAffinity` w plikach PV) i wykonaj:
+```bash
+sudo mkdir -p /mnt/data/db-users /mnt/data/db-catalog /mnt/data/db-showtime /mnt/data/db-booking
+sudo chown -R 999:999 /mnt/data/db-*
+sudo chmod 700 /mnt/data/db-*
+```
+
+> [!IMPORTANT]
+> Pominięcie ustawienia właściciela `999:999` lub nadanie zbyt otwartych uprawnień (np. `777`) spowoduje, że silnik PostgreSQL odmówi uruchomienia i pod wejdzie w stan `CrashLoopBackOff`.
 
 ---
 
 ## 4. Przygotowanie obrazów kontenerów z Docker Hub
 
-System jest w pełni przystosowany do uruchomienia przy użyciu gotowych, produkcyjnych obrazów umieszczonych w rejestrze **Docker Hub** w repozytorium użytkownika `adamad7` w wersji `1.0.3`.
+System korzysta z gotowych obrazów umieszczonych w rejestrze **Docker Hub** w repozytorium użytkownika `adamad7` w wersji **`1.0.4`**.
 
-Dzięki temu **nie ma potrzeby lokalnego budowania obrazów** ani konfigurowania lokalnego środowiska Docker na Minikube. Manifesty wdrożeniowe Kubernetes są domyślnie skonfigurowane tak, aby automatycznie pobierać poniższe obrazy z Docker Hub:
+Manifesty wdrożeniowe są domyślnie skonfigurowane tak, aby automatycznie pobierać poniższe obrazy z Docker Hub:
+- Serwis użytkowników: `adamad7/user-service:1.0.4`
+- Serwis katalogu: `adamad7/catalog-service:1.0.4`
+- Serwis seansów: `adamad7/showtime-service:1.0.4`
+- Serwis rezerwacji: `adamad7/booking-service:1.0.4`
+- Aplikacja frontendowa: `adamad7/frontend:1.0.4`
 
-- Serwis użytkowników: `adamad7/user-service:1.0.3`
-- Serwis katalogu: `adamad7/catalog-service:1.0.3`
-- Serwis seansów: `adamad7/showtime-service:1.0.3`
-- Serwis rezerwacji: `adamad7/booking-service:1.0.3`
-- Aplikacja frontendowa: `adamad7/frontend:1.0.3`
-
-### Opcjonalne: Ręczne pobranie obrazów do pamięci klastra
-Jeśli chcesz pobrać obrazy wcześniej (np. w celu skrócenia czasu pierwszego uruchomienia wdrożenia lub pracy offline), możesz wydać polecenia pobrania obrazów bezpośrednio do pamięci klastra Minikube:
-
+### Opcjonalne: Ręczne pobranie obrazów do pamięci Minikube
 ```bash
-minikube image pull adamad7/user-service:1.0.3
-minikube image pull adamad7/catalog-service:1.0.3
-minikube image pull adamad7/showtime-service:1.0.3
-minikube image pull adamad7/booking-service:1.0.3
-minikube image pull adamad7/frontend:1.0.3
-```
-
-Możesz zweryfikować poprawność pobranych obrazów wewnątrz Minikube za pomocą:
-```bash
-minikube image ls | grep adamad7
+minikube image pull adamad7/user-service:1.0.4
+minikube image pull adamad7/catalog-service:1.0.4
+minikube image pull adamad7/showtime-service:1.0.4
+minikube image pull adamad7/booking-service:1.0.4
+minikube image pull adamad7/frontend:1.0.4
 ```
 
 ---
 
-## 5. Wdrożenie manifestów Kubernetes (Precise Order)
+## 5. Wdrożenie manifestów Kubernetes (Kolejność ma znaczenie!)
 
-Wdrażanie komponentów musi przebiegać w określonej kolejności, aby zapewnić istnienie zależności (przestrzenie nazw, wolumeny, sekrety, bazy danych, a dopiero potem aplikacje i Ingress).
+Wdrożenie komponentów musi przebiegać sekwencyjnie. Nasze aplikacje mają zdefiniowane **jawne limity zasobów dla kontenerów startowych `db-migration`**, co gwarantuje pełną zgodność z rygorystycznymi politykami `ResourceQuota` (np. na Minikube z wyłączonym kontrolerem `LimitRange`).
 
-Uruchom poniższe polecenia sekwencyjnie:
+Uruchom poniższe polecenia po kolei:
 
 ```bash
-# 1. Tworzenie przestrzeni nazw i limitów (Quota, LimitRange)
+# 1. Tworzenie przestrzeni nazw i limitów zasobów (Quota, LimitRange)
 kubectl apply -f k8s/namespaces/
 
-# 2. Tworzenie wolumenów (StorageClass i PersistentVolume)
+# 2. Tworzenie wolumenów (StorageClass i zablokowane za pomocą claimRef PersistentVolumes)
 kubectl apply -f k8s/storage/
 
-# 3. Sekrety (db passwords, JWT secret)
+# 3. Sekrety (hasła DB, klucz JWT)
 kubectl apply -f k8s/secrets/
 
 # 4. Migracje bazodanowe (skrypty SQL w ConfigMaps)
 kubectl apply -f k8s/configmaps/
 
-# 5. Reguły sieciowe (NetworkPolicies)
+# 5. Reguły sieciowe (Polityki sieciowe w tym zaktualizowany allow-backends wspierający Ingress)
 kubectl apply -f k8s/networkpolicies/
 
 # 6. Bazy danych (StatefulSets i usługi ClusterIP)
@@ -104,10 +108,7 @@ kubectl apply -f k8s/db-booking/
 ```
 
 > [!TIP]
-> Przed wdrożeniem aplikacji backendowych warto upewnić się, że pody bazodanowe w pełni wystartowały (status `READY 1/1`), ponieważ initContainers w aplikacjach wykonają automatyczne migracje schematów SQL.
-> Monitoruj stan baz danych za pomocą: `kubectl get pods -n backend-ns -w`
-
-Po pomyślnym uruchomieniu baz danych zaaplikuj pozostałe komponenty:
+> Poczekaj, aż pody baz danych osiągną status `READY 1/1` (`kubectl get pods -n backend-ns -w`). Gdy bazy będą gotowe, wdróż aplikacje backendowe, które automatycznie przeprowadzą migracje schematów SQL:
 
 ```bash
 # 7. Aplikacje backendowe (Deployments i usługi ClusterIP)
@@ -123,125 +124,60 @@ kubectl apply -f k8s/ingress/
 
 ---
 
-## 6. Weryfikacja uruchomienia aplikacji
+## 6. Weryfikacja uruchomienia i Dostęp do Aplikacji
 
-Sprawdź stan wszystkich podów w obu przestrzeniach nazw:
+Sprawdź stan podów we wszystkich przestrzeniach nazw:
 ```bash
 kubectl get pods -A
 ```
-Prawidłowy stan to `READY 1/1` i `STATUS Running` dla wszystkich elementów.
+Wszystkie pody powinny mieć status `Running` i stan `Ready` (np. `1/1` lub `2/2`).
 
-Pobierz adres URL, pod którym aplikacja jest dostępna przez NodePort:
-```bash
-minikube service frontend-nodeport -n frontend-ns --url
-```
-Zwrócony adres (np. `http://192.168.49.2:30080`) posłuży do testowania aplikacji. Zdefiniujmy go w zmiennej środowiskowej dla ułatwienia testów (w powłoce Bash):
-```bash
-export APP_URL=$(minikube service frontend-nodeport -n frontend-ns --url)
-```
+### Dostęp przez Ingress na Minikube (Lokalnie)
+Nasz Ingress nie posiada ograniczeń domenowych (`host`), co pozwala na bezpośrednie zapytania pod adres IP klastra:
+1. Pobierz IP Minikube:
+   ```bash
+   minikube ip
+   ```
+2. Otwórz przeglądarkę i wejdź na adres:
+   ```text
+   http://<ADRES_IP_MINIKUBE>/
+   ```
+
+### Dostęp na klastrze K3s / Proxmox
+Dostęp odbywa się poprzez wystawiony kontroler Ingress i skonfigurowany tunel Cloudflare pod Twoją domeną (np. `https://cinema.mazadonia.cc/`). Dzięki regułom w `allow-backends.yaml`, kontroler Ingress działający w `ingress-nginx`/`kube-system` bez problemu prześle zapytania `/api/...` bezpośrednio do usług backendowych (brak błędu 504 Gateway Timeout).
 
 ---
 
 ## 7. Scenariusze testowe i polecenia weryfikacji API
 
-Poniższe scenariusze odwzorowują interakcję z systemem za pośrednictwem bezpiecznej bramy (Nginx proxy) na porcie frontendu.
+Skonfiguruj zmienną środowiskową `APP_URL` wskazującą na adres aplikacji (np. `http://192.168.49.2` dla Minikube lub `https://cinema.mazadonia.cc` dla klastra produkcyjnego):
+
+```bash
+export APP_URL="http://192.168.49.2" # zamień na swój adres
+```
 
 ### Scenariusz 1: Pobranie listy filmów (Catalog Service)
-Zweryfikowanie połączenia bramy z serwisem katalogu oraz automatycznego zasilenia bazy danych filmami.
 - **Zapytanie HTTP**: `GET /api/movies`
-- **Polecenie testowe**:
-```bash
-curl -i $APP_URL/api/movies
-```
-- **Oczekiwany rezultat**: Kod `200 OK` i lista filmów w formacie JSON (zawierająca m.in. *The Matrix*, *Inception*, *Dune: Part Two*):
-```json
-[{"id":1,"title":"The Matrix","description":{"String":"...","Valid":true},"duration_minutes":136,...}]
-```
-
----
+- **Polecenie**:
+  ```bash
+  curl -i $APP_URL/api/movies
+  ```
+- **Oczekiwany rezultat**: Kod `200 OK` i lista filmów w formacie JSON (np. *The Matrix*, *Inception*).
 
 ### Scenariusz 2: Rejestracja nowego użytkownika (User Service)
-Rejestracja konta użytkownika z szyfrowaniem hasła algorytmem bcrypt.
 - **Zapytanie HTTP**: `POST /api/users/register`
-- **Polecenie testowe**:
-```bash
-curl -i -X POST -H "Content-Type: application/json" \
-  -d '{"username":"jan_kowalski", "email":"jan@kowalski.pl", "password":"BezpieczneHaslo1!"}' \
-  $APP_URL/api/users/register
-```
-- **Oczekiwany rezultat**: Kod `201 Created` i dane nowo zarejestrowanego użytkownika z ukryciem hasła w postaci hashu:
-```json
-{"id":1,"username":"jan_kowalski","email":"jan@kowalski.pl","role":"user","created_at":...}
-```
+- **Polecenie**:
+  ```bash
+  curl -i -X POST -H "Content-Type: application/json" \
+    -d '{"username":"jan_kowalski", "email":"jan@kowalski.pl", "password":"BezpieczneHaslo1!"}' \
+    $APP_URL/api/users/register
+  ```
+- **Oczekiwany rezultat**: Kod `201 Created` i dane użytkownika z hashem hasła.
 
----
+### Scenariusz 3: Test Izolacji Sieciowej (NetworkPolicy)
+Sprawdzenie działania rygorystycznych reguł Cilium – pod w przestrzeni `frontend-ns` nie może łączyć się bezpośrednio z bazą danych w `backend-ns` (cały ruch musi przechodzić przez usługi backendu):
 
-### Scenariusz 3: Uwierzytelnienie i logowanie użytkownika (User Service)
-Generowanie bezpiecznego tokenu JWT.
-- **Zapytanie HTTP**: `POST /api/users/login`
-- **Polecenie testowe**:
-```bash
-curl -i -X POST -H "Content-Type: application/json" \
-  -d '{"email":"jan@kowalski.pl", "password":"BezpieczneHaslo1!"}' \
-  $APP_URL/api/users/login
-```
-- **Oczekiwany rezultat**: Kod `200 OK` i token autoryzacyjny:
-```json
-{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}
-```
-
-> [!TIP]
-> Zapisz wygenerowany token (bez cudzysłowów) w zmiennej dla kolejnego testu:
-> `export TOKEN="twoj_token_jwt"`
-
----
-
-### Scenariusz 4: Pobranie profilu zalogowanego użytkownika (User Service)
-Autoryzacja zapytania z użyciem tokena JWT w nagłówku.
-- **Zapytanie HTTP**: `GET /api/users/profile`
-- **Polecenie testowe**:
-```bash
-curl -i -H "Authorization: Bearer $TOKEN" $APP_URL/api/users/profile
-```
-- **Oczekiwany rezultat**: Kod `200 OK` z profilem użytkownika powiązanym z tokenem:
-```json
-{"email":"jan@kowalski.pl","id":1,"role":"user","username":"jan_kowalski"}
-```
-
-Jeśli wyślesz zapytanie bez nagłówka lub z błędnym tokenem:
-```bash
-curl -i $APP_URL/api/users/profile
-```
-Otrzymasz poprawną odmowę dostępu: `401 Unauthorized`.
-
----
-
-### Scenariusz 5: Odpytanie o pokoje kinowe i seanse (Showtime Service)
-Pobranie automatycznie wygenerowanej mapy sal kinowych i harmonogramu seansów.
-- **Zapytanie o pokoje**: `GET /api/rooms`
-- **Polecenie testowe**:
-```bash
-curl -i $APP_URL/api/rooms
-```
-- **Zapytanie o seanse dla filmu o ID = 1**: `GET /api/showtimes?movie_id=1`
-- **Polecenie testowe**:
-```bash
-curl -i "$APP_URL/api/showtimes?movie_id=1"
-```
-- **Oczekiwany rezultat**: Kody `200 OK` wraz z listą dostępnych sal oraz seansów dopasowanych do wybranego filmu.
-
----
-
-### Scenariusz 6: Test Izolacji Sieciowej (NetworkPolicy)
-Sprawdzenie, czy reguły sieciowe (deny-by-default) skutecznie blokują ruch nieautoryzowany. Zgodnie z architekturą, pody w przestrzeni `frontend-ns` NIE MOGĄ łączyć się bezpośrednio z bazami danych w przestrzeni `backend-ns` (dostęp ma tylko backend).
-
-**Polecenie testowe:**
-Uruchom pod w przestrzeni frontendu i spróbuj połączyć się z bazą danych na porcie 5432:
 ```bash
 kubectl run network-test --rm -i --tty --image=alpine --namespace=frontend-ns --sh -c "apk add --no-cache postgresql-client && pg_isready -h db-users.backend-ns.svc.cluster.local -p 5432"
 ```
-
-- **Oczekiwany rezultat**: Połączenie zostanie zablokowane i upłynie limit czasu oczekiwania (brak odpowiedzi), ponieważ zasady NetworkPolicy filtrują ten nieautoryzowany ruch na poziomie L4.
-```
-db-users.backend-ns.svc.cluster.local:5432 - no response
-```
+- **Oczekiwany rezultat**: Połączenie zostanie całkowicie zablokowane na warstwie sieciowej przez eBPF Cilium (brak odpowiedzi / timeout).
