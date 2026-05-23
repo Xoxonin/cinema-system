@@ -6,7 +6,7 @@ Ten przewodnik krok po kroku opisuje sposób konfigurowania, wdrażania oraz tes
 
 ## 1. Wymagania wstępne
 
-Przed przystąpieniem do instalacji upewnij się, że na systemie lokalnym zainstalowane są następujące narzędzia:
+Przed przystąpieniem do instalacji należy upewnić się, że na systemie lokalnym zainstalowane są następujące narzędzia:
 - **Minikube** (v1.30.0 lub nowszy) lub działający klaster **K3s/Kubernetes**
 - **kubectl** (skonfigurowany do obsługi klastra)
 - **Docker** (opcjonalnie, do lokalnych testów)
@@ -16,7 +16,7 @@ Przed przystąpieniem do instalacji upewnij się, że na systemie lokalnym zains
 
 ## 2. Inicjalizacja klastra (opcjonalnie dla Minikube)
 
-Jeśli wdrażasz aplikację lokalnie na Minikube, uruchom lokalny klaster przy użyciu sterownika Docker:
+Jeśli aplikacja wdrażana jest lokalnie na Minikube, należy uruchomić lokalny klaster przy użyciu sterownika Docker:
 
 ```bash
 minikube start --driver=docker
@@ -45,13 +45,13 @@ Opracowana architektura korzysta z wolumenów typu `PersistentVolume` z mapowani
 Ponieważ kontenery bazodanowe są utwardzone i działają jako użytkownik nieuprzywilejowany (`runAsUser: 999`), a **PostgreSQL wymaga rygorystycznych zabezpieczeń katalogu danych (uprawnienia 700)**, należy utworzyć katalogi i nadać im odpowiedniego właściciela oraz uprawnienia na węźle, na którym działa baza danych.
 
 ### Opcja A: Wdrożenie na Minikube (Lokalnie)
-Wykonaj poniższe polecenie SSH bezpośrednio na maszynie wirtualnej Minikube:
+Wykonać poniższe polecenie SSH bezpośrednio na maszynie wirtualnej Minikube:
 ```bash
 minikube ssh "sudo mkdir -p /mnt/data/db-users /mnt/data/db-catalog /mnt/data/db-showtime /mnt/data/db-booking && sudo chown -R 999:999 /mnt/data/db-* && sudo chmod 700 /mnt/data/db-*"
 ```
 
 ### Opcja B: Wdrożenie na klastrze K3s / Proxmox (Wielowęzłowym)
-Zaloguj się na węzeł docelowy (np. `node-1`, na który wskazuje `nodeAffinity` w plikach PV) i wykonaj:
+Zalogować się na węzeł docelowy (np. `node-1`, na który wskazuje `nodeAffinity` w plikach PV) i wykonać:
 ```bash
 sudo mkdir -p /mnt/data/db-users /mnt/data/db-catalog /mnt/data/db-showtime /mnt/data/db-booking
 sudo chown -R 999:999 /mnt/data/db-*
@@ -112,7 +112,7 @@ minikube image pull adamad7/frontend:1.0.4
 
 Wdrożenie komponentów musi przebiegać sekwencyjnie. Aplikacje mają zdefiniowane **jawne limity zasobów dla kontenerów startowych `db-migration`**, co gwarantuje pełną zgodność z rygorystycznymi politykami `ResourceQuota` (np. na Minikube z wyłączonym kontrolerem `LimitRange`).
 
-Uruchomić poniższe polecenia po kolei:
+Należy uruchomić poniższe polecenia po kolei:
 
 ```bash
 # 1. Tworzenie przestrzeni nazw i limitów zasobów (Quota, LimitRange)
@@ -138,7 +138,7 @@ kubectl apply -f k8s/db-booking/
 ```
 
 > [!TIP]
-> Poczekaj, aż pody baz danych osiągną status `READY 1/1` (`kubectl get pods -n backend-ns -w`). Gdy bazy będą gotowe, wdróż aplikacje backendowe, które automatycznie przeprowadzą migracje schematów SQL:
+> Należy poczekać, aż pody baz danych osiągną status `READY 1/1` (`kubectl get pods -n backend-ns -w`). Gdy bazy będą gotowe, można przeprowadzić wdrożenie aplikacji backendowych, które automatycznie przeprowadzą migracje schematów SQL:
 
 ```bash
 # 7. Aplikacje backendowe (Deployments i usługi ClusterIP)
@@ -180,11 +180,11 @@ Na systemach Windows oraz macOS wirtualna sieć Minikube działa w izolowanym ko
    ```bash
    minikube tunnel
    ```
-3. Zostawić to okno uruchomione w tle! Tunel powiąże ruch sieciowy i przekieruje go do klastra.
+3. Zostawić to okno uruchomione w tle. Tunel powiąże ruch sieciowy i przekieruje go do klastra.
 4. Otworzyć przeglądarkę i wejść na lokalny adres: `http://localhost/` lub `http://127.0.0.1/`.
 
 ### Dostęp na klastrze K3s / Proxmox
-Dostęp odbywa się poprzez wystawiony kontroler Ingress i skonfigurowany tunel Cloudflare pod wybraną domeną (np. `https://cinema.example.com/`). Dzięki regułom w `allow-backends.yaml`, kontroler Ingress działający w `ingress-nginx`/`kube-system` bez problemu prześle zapytania `/api/...` bezpośrednio do usług backendowych (brak błędu 504 Gateway Timeout).
+Dostęp odbywa się poprzez wystawiony kontroler Ingress lub skonfigurowany tunel Cloudflare pod wybraną domeną (np. `https://cinema.example.com/`). Dzięki regułom w `allow-backends.yaml`, kontroler Ingress działający w `ingress-nginx`/`kube-system` bez problemu prześle zapytania `/api/...` bezpośrednio do usług backendowych.
 
 ---
 
