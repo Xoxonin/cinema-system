@@ -217,10 +217,18 @@ export APP_URL="http://localhost" # zamienić na właściwy adres dla danego sys
   ```
 - **Oczekiwany rezultat**: Kod `201 Created` i dane użytkownika z hashem hasła.
 
-### Scenariusz 3: Test Izolacji Sieciowej (NetworkPolicy)
-Sprawdzenie działania rygorystycznych reguł Cilium – pod w przestrzeni `frontend-ns` nie może łączyć się bezpośrednio z bazą danych w `backend-ns` (cały ruch musi przechodzić przez usługi backendu):
+### Scenariusz 3: Pobranie szczegółów konkretnego filmu (Catalog Service)
+- **Zapytanie HTTP**: `GET /api/movies/1`
+- **Polecenie**:
+  ```bash
+  curl -i $APP_URL/api/movies/1
+  ```
+- **Oczekiwany rezultat**: Kod `200 OK` i szczegółowe dane filmu o ID 1 w formacie JSON (np. *The Matrix*).
 
-```bash
-kubectl run network-test --rm -i --tty --image=alpine --namespace=frontend-ns --sh -c "apk add --no-cache postgresql-client && pg_isready -h db-users.backend-ns.svc.cluster.local -p 5432"
-```
-- **Oczekiwany rezultat**: Połączenie zostanie całkowicie zablokowane na warstwie sieciowej przez eBPF Cilium (brak odpowiedzi / timeout).
+### Scenariusz 4: Pobranie seansów dla wybranego filmu (Showtime Service)
+- **Zapytanie HTTP**: `GET /api/showtimes?movie_id=1`
+- **Polecenie**:
+  ```bash
+  curl -i "$APP_URL/api/showtimes?movie_id=1"
+  ```
+- **Oczekiwany rezultat**: Kod `200 OK` i lista zaplanowanych seansów dla filmu o ID 1 w formacie JSON.
