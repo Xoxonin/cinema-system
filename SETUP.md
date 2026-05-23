@@ -61,6 +61,29 @@ sudo chmod 700 /mnt/data/db-*
 > [!IMPORTANT]
 > Pominięcie ustawienia właściciela `999:999` lub nadanie zbyt otwartych uprawnień (np. `777`) spowoduje, że silnik PostgreSQL odmówi uruchomienia i pod wejdzie w stan `CrashLoopBackOff`.
 
+### Weryfikacja utworzonych katalogów i uprawnień
+W celu upewnienia się, że katalogi fizyczne zostały poprawnie utworzone z właściwym właścicielem (UID/GID `999`) oraz restrykcyjnymi uprawnieniami (`700`), należy wykonać odpowiednie polecenie weryfikacyjne:
+
+#### Dla środowiska Minikube (z komputera hosta):
+```bash
+minikube ssh "ls -la /mnt/data"
+```
+
+#### Dla środowiska produkcyjnego K3s / Proxmox (bezpośrednio na węźle):
+```bash
+ls -la /mnt/data
+```
+
+**Oczekiwany rezultat (prawa dostępu muszą mieć format `drwx------`, a kolumny właściciela i grupy wartość `999`):**
+```text
+drwxr-xr-x 6 root root 4096 May 23 15:15 .
+drwxr-xr-x 4 root root 4096 May 23 15:15 ..
+drwx------ 2  999  999 4096 May 23 15:15 db-booking
+drwx------ 2  999  999 4096 May 23 15:15 db-catalog
+drwx------ 2  999  999 4096 May 23 15:15 db-showtime
+drwx------ 2  999  999 4096 May 23 15:15 db-users
+```
+
 ---
 
 ## 4. Przygotowanie obrazów kontenerów z Docker Hub
