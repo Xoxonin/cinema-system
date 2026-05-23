@@ -316,13 +316,13 @@ Dla wszystkich pięciu mikroserwisów wdrożono mechanizmy samoleczenia (Self-he
     *   **Parametry:** `initialDelaySeconds: 5`, `periodSeconds: 5`.
     *   **Uzasadnienie:** Gwarantuje, że nowy pod nie otrzyma ruchu sieciowego od użytkowników przed pełnym zakończeniem inicjalizacji (np. zanim nawiąże stabilne połączenie z bazą danych i wczyta konfigurację). Jest to kluczowy element bezprzestojowego wdrażania (`RollingUpdate`) – stary pod jest wyłączany dopiero wtedy, gdy nowo utworzony pod zgłosi pełną gotowość.
 
----
-
 ### Dodatkowe mechanizmy
 Konfiguracja następujących elementów:
 - **Polityki sieciowe**
 - **Limity i przydziały zasobów**
 - **Reguły planowania podów (Pod Affinity & Anti-Affinity)**
+
+Została szczegółowo opisana w dedykowanym pliku: **[DODATKOWE.md](DODATKOWE.md)**
 
 
 
