@@ -10,6 +10,9 @@ spec:
   - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: local-storage
+  claimRef:
+    name: pg-data-db-users-0
+    namespace: backend-ns
   local:
     path: /mnt/data/db-users
   nodeAffinity:
