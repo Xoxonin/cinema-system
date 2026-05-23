@@ -19,96 +19,6 @@ System składa się z pięciu głównych komponentów: frontendu oraz czterech m
 - **PostgreSQL StatefulSets**: Dedykowane bazy danych dla każdego serwisu, gwarantujące pełną izolację danych.
 - **Db Migrations**: Kontenery automatycznie wykonujące migracje schematów baz danych przy starcie.
 
-### Schemat Działania i Przepływu Ruchu w Klastrze Kubernetes
-
-Poniższy schemat Mermaid przedstawia pełną architekturę sieciową systemu w Kubernetes, obrazując trasowanie żądań zewnętrznych przez Ingress oraz alternatywną ścieżkę NodePort, a także komunikację między przestrzeniami nazw (`frontend-ns` i `backend-ns`):
-
-```mermaid
-graph TD
-    %% Entry Points
-    subgraph Klienci i Brzeg Klastra [Dostęp Zewnętrzny]
-        Client[Przeglądarka Klienta]
-        Ingress[cinema-ingress Ingress - Port 80 / 443]
-        NodePort[Frontend NodePort Service - Port 30080]
-    end
-
-    %% frontend-ns
-    subgraph frontend-ns [Przestrzeń nazw: frontend-ns]
-        FrontendPod[frontend-pod: React + Nginx Proxy]
-        
-        subgraph ExternalNames [Usługi Mapujące CNAME]
-            ExtUser[user-service ExternalName]
-            ExtCatalog[catalog-service ExternalName]
-            ExtShowtime[showtime-service ExternalName]
-            ExtBooking[booking-service ExternalName]
-        end
-    end
-
-    %% backend-ns
-    subgraph backend-ns [Przestrzeń nazw: backend-ns]
-        subgraph GoServices [Mikroserwisy Go]
-            UserService[user-service pod:8081]
-            CatalogService[catalog-service pod:8082]
-            ShowtimeService[showtime-service pod:8083]
-            BookingService[booking-service pod:8084]
-        end
-
-        subgraph PostgreSQL [Trwała Warstwa Danych]
-            DbUsers[(db-users StatefulSet:5432)]
-            DbCatalog[(db-catalog StatefulSet:5432)]
-            DbShowtime[(db-showtime StatefulSet:5432)]
-            DbBooking[(db-booking StatefulSet:5432)]
-        end
-    end
-
-    %% Connections - Ingress Path
-    Client -->|Żądanie HTTP| Ingress
-    
-    Ingress -->|Ścieżka / | FrontendPod
-    Ingress -->|Ścieżka /api/users | ExtUser
-    Ingress -->|Ścieżka /api/movies | ExtCatalog
-    Ingress -->|Ścieżka /api/showtimes | ExtShowtime
-    Ingress -->|Ścieżka /api/rooms | ExtShowtime
-    Ingress -->|Ścieżka /api/bookings | ExtBooking
-
-    %% Connections - NodePort Path
-    Client -.->|Alternatywny dostęp NodePort| NodePort
-    NodePort --> FrontendPod
-    FrontendPod -.->|Proxy dla /api/* bez Ingress| GoServices
-
-    %% ExternalNames Routing
-    ExtUser --> UserService
-    ExtCatalog --> CatalogService
-    ExtShowtime --> ShowtimeService
-    ExtBooking --> BookingService
-
-    %% Services to Databases
-    UserService --> DbUsers
-    CatalogService --> DbCatalog
-    ShowtimeService --> DbShowtime
-    BookingService --> DbBooking
-
-    %% Styling
-    style Client fill:#dec0f1,stroke:#333,stroke-width:2px,color:#000
-    style Ingress fill:#ff69b4,stroke:#333,stroke-width:2px,color:#000
-    style NodePort fill:#f4a261,stroke:#333,stroke-width:2px,color:#000
-    style FrontendPod fill:#6495ed,stroke:#333,stroke-width:2px,color:#000
-    
-    style ExtUser fill:#e9c46a,stroke:#333,stroke-width:1px,color:#000
-    style ExtCatalog fill:#e9c46a,stroke:#333,stroke-width:1px,color:#000
-    style ExtShowtime fill:#e9c46a,stroke:#333,stroke-width:1px,color:#000
-    style ExtBooking fill:#e9c46a,stroke:#333,stroke-width:1px,color:#000
-
-    style UserService fill:#90ee90,stroke:#333,stroke-width:2px,color:#000
-    style CatalogService fill:#90ee90,stroke:#333,stroke-width:2px,color:#000
-    style ShowtimeService fill:#90ee90,stroke:#333,stroke-width:2px,color:#000
-    style BookingService fill:#90ee90,stroke:#333,stroke-width:2px,color:#000
-
-    style DbUsers fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#000
-    style DbCatalog fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#000
-    style DbShowtime fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#000
-    style DbBooking fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#000
-```
 
 
 ## Uruchomienie lokalne (dev)
@@ -211,13 +121,104 @@ Reprezentacja została wygenerowana narzędziem `compose-viz` i zapisana jako:
 
 # Zadanie projektowe 2
 
-## Zaawansowana, deklaratywna architektura Kubernetes dla projektu Cinema System
+### Schemat Działania i Przepływu Ruchu w Klastrze Kubernetes
 
-W tej sekcji opisano zaawansowaną architekturę orkiestracji kontenerów w wielowęzłowym środowisku Kubernetes, wdrożoną w projekcie **cinema-system** w celach zapewnienia wysokiej niezawodności, skalowalności i pełnego bezpieczeństwa chmurowego.
+Poniższy schemat Mermaid przedstawia pełną architekturę sieciową systemu w Kubernetes, obrazując trasowanie żądań zewnętrznych przez Ingress oraz alternatywną ścieżkę NodePort, a także komunikację między przestrzeniami nazw (`frontend-ns` i `backend-ns`):
+
+```mermaid
+graph TD
+    %% Entry Points
+    subgraph Klienci i Brzeg Klastra [Dostęp Zewnętrzny]
+        Client[Przeglądarka Klienta]
+        Ingress[cinema-ingress Ingress - Port 80 / 443]
+        NodePort[Frontend NodePort Service - Port 30080]
+    end
+
+    %% frontend-ns
+    subgraph frontend-ns [Przestrzeń nazw: frontend-ns]
+        FrontendPod[frontend-pod: React + Nginx Proxy]
+        
+        subgraph ExternalNames [Usługi Mapujące CNAME]
+            ExtUser[user-service ExternalName]
+            ExtCatalog[catalog-service ExternalName]
+            ExtShowtime[showtime-service ExternalName]
+            ExtBooking[booking-service ExternalName]
+        end
+    end
+
+    %% backend-ns
+    subgraph backend-ns [Przestrzeń nazw: backend-ns]
+        subgraph GoServices [Mikroserwisy Go]
+            UserService[user-service pod:8081]
+            CatalogService[catalog-service pod:8082]
+            ShowtimeService[showtime-service pod:8083]
+            BookingService[booking-service pod:8084]
+        end
+
+        subgraph PostgreSQL [Trwała Warstwa Danych]
+            DbUsers[(db-users StatefulSet:5432)]
+            DbCatalog[(db-catalog StatefulSet:5432)]
+            DbShowtime[(db-showtime StatefulSet:5432)]
+            DbBooking[(db-booking StatefulSet:5432)]
+        end
+    end
+
+    %% Connections - Ingress Path
+    Client -->|Żądanie HTTP| Ingress
+    
+    Ingress -->|Ścieżka / | FrontendPod
+    Ingress -->|Ścieżka /api/users | ExtUser
+    Ingress -->|Ścieżka /api/movies | ExtCatalog
+    Ingress -->|Ścieżka /api/showtimes | ExtShowtime
+    Ingress -->|Ścieżka /api/rooms | ExtShowtime
+    Ingress -->|Ścieżka /api/bookings | ExtBooking
+
+    %% Connections - NodePort Path
+    Client -.->|Alternatywny dostęp NodePort| NodePort
+    NodePort --> FrontendPod
+    FrontendPod -.->|Proxy dla /api/* bez Ingress| GoServices
+
+    %% ExternalNames Routing
+    ExtUser --> UserService
+    ExtCatalog --> CatalogService
+    ExtShowtime --> ShowtimeService
+    ExtBooking --> BookingService
+
+    %% Services to Databases
+    UserService --> DbUsers
+    CatalogService --> DbCatalog
+    ShowtimeService --> DbShowtime
+    BookingService --> DbBooking
+
+    %% Styling - Catppuccin Mocha Dark Theme
+    style Client fill:#1e1e2e,stroke:#dec0f1,color:#cdd6f4,stroke-width:2px
+    style Ingress fill:#1e1e2e,stroke:#f5c2e7,color:#cdd6f4,stroke-width:2px
+    style NodePort fill:#1e1e2e,stroke:#f4a261,color:#cdd6f4,stroke-width:2px
+    style FrontendPod fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4,stroke-width:2px
+    
+    style ExtUser fill:#181825,stroke:#f9e2af,color:#cdd6f4,stroke-width:1px,stroke-dasharray: 3 3
+    style ExtCatalog fill:#181825,stroke:#f9e2af,color:#cdd6f4,stroke-width:1px,stroke-dasharray: 3 3
+    style ExtShowtime fill:#181825,stroke:#f9e2af,color:#cdd6f4,stroke-width:1px,stroke-dasharray: 3 3
+    style ExtBooking fill:#181825,stroke:#f9e2af,color:#cdd6f4,stroke-width:1px,stroke-dasharray: 3 3
+
+    style UserService fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4,stroke-width:2px
+    style CatalogService fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4,stroke-width:2px
+    style ShowtimeService fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4,stroke-width:2px
+    style BookingService fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4,stroke-width:2px
+
+    style DbUsers fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4,stroke-width:2px
+    style DbCatalog fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4,stroke-width:2px
+    style DbShowtime fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4,stroke-width:2px
+    style DbBooking fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4,stroke-width:2px
+```
 
 Szczegółowy opis techniczny zaawansowanych mechanizmów bezpieczeństwa, limitów oraz reguł orkiestracji znajduje się również w dedykowanym pliku: **bezpieczenstwo_i_mechanizmy.md**
 
 ---
+
+## Zaawansowana, deklaratywna architektura Kubernetes dla projektu Cinema System
+
+W tej sekcji opisano zaawansowaną architekturę orkiestracji kontenerów w wielowęzłowym środowisku Kubernetes, wdrożoną w projekcie **cinema-system** w celach zapewnienia wysokiej niezawodności, skalowalności i pełnego bezpieczeństwa chmurowego.
 
 ### 1. Podział na przestrzenie nazw (Namespaces)
 
