@@ -34,16 +34,18 @@ Wykorzystując CNI **Cilium**, wdrożono rygorystyczny model bezpieczeństwa sie
 
 ```mermaid
 graph TD
-    IngressController[Ingress Controller / Internet - Port 80 / 443] -->|Port 80/8080| Frontend[frontend-ns: frontend]
-    Frontend -->|Port 8081-8084| ExternalNames[frontend-ns: ExternalName Services]
-    ExternalNames -->|Port 8081-8084| Backends[backend-ns: Go Microservices]
-    Backends -->|Port 5432| Databases[backend-ns: PostgreSQL StatefulSets]
-    Backends -.->|Port 53 UDP/TCP| CoreDNS[kube-system: CoreDNS]
+    IngressController["Ingress Controller / Internet (Port 80 / 443)"] -->|Port 80/8080| Frontend["frontend-ns: frontend (Pod)"]
+    Frontend -->|Port 8081-8084| ExternalNames["frontend-ns: ExternalName Services"]
+    ExternalNames -->|Port 8081-8084| Backends["backend-ns: Go Microservices"]
+    Backends -->|Port 5432| Databases["backend-ns: PostgreSQL StatefulSets"]
+    Backends -.->|Port 53 UDP/TCP| CoreDNS["kube-system: CoreDNS"]
 
-    style IngressController fill:#f9f,stroke:#333,stroke-width:2px
-    style Frontend fill:#bbf,stroke:#333,stroke-width:2px
-    style Backends fill:#bfb,stroke:#333,stroke-width:2px
-    style Databases fill:#fbb,stroke:#333,stroke-width:2px
+    style IngressController fill:#1e1e2e,stroke:#f5c2e7,color:#cdd6f4,stroke-width:2px
+    style Frontend fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4,stroke-width:2px
+    style ExternalNames fill:#181825,stroke:#f9e2af,color:#cdd6f4,stroke-width:1px,stroke-dasharray: 3 3
+    style Backends fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4,stroke-width:2px
+    style Databases fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4,stroke-width:2px
+    style CoreDNS fill:#181825,stroke:#94e2d5,color:#cdd6f4,stroke-width:1px
 ```
 
 ### A. Domyślna odmowa ruchu (Deny-by-Default)
