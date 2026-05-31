@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: frontend-ns
+
+resources:
+- frontend/deployment.yaml
+- frontend/ext-booking-service.yaml
+- frontend/ext-catalog-service.yaml
+- frontend/ext-showtime-service.yaml
+- frontend/ext-user-service.yaml
+- frontend/hpa.yaml
+- frontend/service-clusterip.yaml
+- frontend/service-nodeport.yaml
+- ingress/ingress.yaml
+- networkpolicies/allow-frontend.yaml
+- networkpolicies/default-deny-frontend.yaml
+- namespaces/01-frontend-limitrange.yaml
+- namespaces/01-frontend-quota.yaml

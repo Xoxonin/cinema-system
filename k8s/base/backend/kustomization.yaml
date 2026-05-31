@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: backend-ns
+
+resources:
+- booking-service/deployment.yaml
+- booking-service/service.yaml
+- catalog-service/deployment.yaml
+- catalog-service/service.yaml
+- showtime-service/deployment.yaml
+- showtime-service/service.yaml
+- user-service/deployment.yaml
+- user-service/service.yaml
+- db-booking/service.yaml
+- db-booking/statefulset.yaml
+- db-catalog/service.yaml
+- db-catalog/statefulset.yaml
+- db-showtime/service.yaml
+- db-showtime/statefulset.yaml
+- db-users/service.yaml
+- db-users/statefulset.yaml
+- configmaps/booking-db-migrations.yaml
+- configmaps/catalog-db-migrations.yaml
+- configmaps/showtime-db-migrations.yaml
+- configmaps/user-db-migrations.yaml
+- secrets/db-booking-secret.yaml
+- secrets/db-catalog-secret.yaml
+- secrets/db-showtime-secret.yaml
+- secrets/db-users-secret.yaml
+- secrets/user-service-secret.yaml
+- storage/storage-class.yaml
+- storage/pv-db-booking.yaml
+- storage/pv-db-catalog.yaml
+- storage/pv-db-showtime.yaml
+- storage/pv-db-users.yaml
+- networkpolicies/allow-backends.yaml
+- networkpolicies/allow-databases.yaml
+- networkpolicies/default-deny-backend.yaml
+- namespaces/01-backend-limitrange.yaml
+- namespaces/01-backend-quota.yaml
