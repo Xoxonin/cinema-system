@@ -16,6 +16,14 @@ patches:
     - op: replace
       path: /spec/egress/1/to/0/namespaceSelector/matchLabels/name
       value: backend-ns-dev
+# Remove hardcoded nodePort in dev to allow dynamic allocation and avoid conflicts
+- target:
+    kind: Service
+    name: frontend-nodeport
+  patch: |
+    - op: remove
+      path: /spec/ports/0/nodePort
+
 
 replacements:
 # Replace Ingress Host with DOMAIN variable
