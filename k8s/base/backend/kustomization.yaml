@@ -29,7 +29,6 @@ resources:
 - secrets/db-showtime-secret.yaml
 - secrets/db-users-secret.yaml
 - secrets/user-service-secret.yaml
-- storage/storage-class.yaml
 - storage/pv-db-booking.yaml
 - storage/pv-db-catalog.yaml
 - storage/pv-db-showtime.yaml
