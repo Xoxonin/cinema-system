@@ -1,0 +1,80 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: frontend-ns-dev
+
+resources:
+- ../../../base/frontend
+- ./environment-config.yaml
+
+patches:
+# Patch for allow-frontend network policy to egress to backend-ns-dev namespace
+- target:
+    kind: NetworkPolicy
+    name: allow-frontend
+  patch: |
+    - op: replace
+      path: /spec/egress/1/to/0/namespaceSelector/matchLabels/name
+      value: backend-ns-dev
+# Remove hardcoded nodePort in dev to allow dynamic allocation and avoid conflicts
+- target:
+    kind: Service
+    name: frontend-nodeport
+  patch: |
+    - op: remove
+      path: /spec/ports/0/nodePort
+
+
+replacements:
+# Replace Ingress Host with DOMAIN variable
+- source:
+    kind: ConfigMap
+    name: environment-config
+    fieldPath: data.DOMAIN
+  targets:
+  - select:
+      kind: Ingress
+      name: cinema-ingress
+    fieldPaths:
+    - spec.rules.0.host
+# Replace ExternalName Service paths
+- source:
+    kind: ConfigMap
+    name: environment-config
+    fieldPath: data.BOOKING_SVC_EXTERNAL
+  targets:
+  - select:
+      kind: Service
+      name: booking-service
+    fieldPaths:
+    - spec.externalName
+- source:
+    kind: ConfigMap
+    name: environment-config
+    fieldPath: data.CATALOG_SVC_EXTERNAL
+  targets:
+  - select:
+      kind: Service
+      name: catalog-service
+    fieldPaths:
+    - spec.externalName
+- source:
+    kind: ConfigMap
+    name: environment-config
+    fieldPath: data.SHOWTIME_SVC_EXTERNAL
+  targets:
+  - select:
+      kind: Service
+      name: showtime-service
+    fieldPaths:
+    - spec.externalName
+- source:
+    kind: ConfigMap
+    name: environment-config
+    fieldPath: data.USER_SVC_EXTERNAL
+  targets:
+  - select:
+      kind: Service
+      name: user-service
+    fieldPaths:
+    - spec.externalName

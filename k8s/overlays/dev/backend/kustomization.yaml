@@ -1,0 +1,107 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: backend-ns-dev
+
+resources:
+- ../../../base/backend
+
+patches:
+# Patch for allow-backends network policy to use frontend-ns-dev namespace
+- target:
+    kind: NetworkPolicy
+    name: allow-backends
+  patch: |
+    - op: replace
+      path: /spec/ingress/0/from/0/namespaceSelector/matchLabels/name
+      value: frontend-ns-dev
+# Patches for PersistentVolumes
+- target:
+    kind: PersistentVolume
+    name: pv-db-booking
+  patch: |
+    - op: replace
+      path: /metadata/name
+      value: pv-db-booking-dev
+    - op: replace
+      path: /spec/local/path
+      value: /mnt/data/db-booking-dev
+    - op: replace
+      path: /spec/claimRef/namespace
+      value: backend-ns-dev
+- target:
+    kind: PersistentVolume
+    name: pv-db-catalog
+  patch: |
+    - op: replace
+      path: /metadata/name
+      value: pv-db-catalog-dev
+    - op: replace
+      path: /spec/local/path
+      value: /mnt/data/db-catalog-dev
+    - op: replace
+      path: /spec/claimRef/namespace
+      value: backend-ns-dev
+- target:
+    kind: PersistentVolume
+    name: pv-db-showtime
+  patch: |
+    - op: replace
+      path: /metadata/name
+      value: pv-db-showtime-dev
+    - op: replace
+      path: /spec/local/path
+      value: /mnt/data/db-showtime-dev
+    - op: replace
+      path: /spec/claimRef/namespace
+      value: backend-ns-dev
+- target:
+    kind: PersistentVolume
+    name: pv-db-users
+  patch: |
+    - op: replace
+      path: /metadata/name
+      value: pv-db-users-dev
+    - op: replace
+      path: /spec/local/path
+      value: /mnt/data/db-users-dev
+    - op: replace
+      path: /spec/claimRef/namespace
+      value: backend-ns-dev
+# Patches for Database Secrets to use dev DB services
+- target:
+    kind: Secret
+    name: db-booking-secret
+  patch: |
+    - op: replace
+      path: /stringData/DATABASE_URL
+      value: postgres://postgres:postgrespassword@db-booking.backend-ns-dev.svc.cluster.local:5432/booking?sslmode=disable
+- target:
+    kind: Secret
+    name: db-catalog-secret
+  patch: |
+    - op: replace
+      path: /stringData/DATABASE_URL
+      value: postgres://postgres:postgrespassword@db-catalog.backend-ns-dev.svc.cluster.local:5432/catalog?sslmode=disable
+- target:
+    kind: Secret
+    name: db-showtime-secret
+  patch: |
+    - op: replace
+      path: /stringData/DATABASE_URL
+      value: postgres://postgres:postgrespassword@db-showtime.backend-ns-dev.svc.cluster.local:5432/showtime?sslmode=disable
+- target:
+    kind: Secret
+    name: db-users-secret
+  patch: |
+    - op: replace
+      path: /stringData/DATABASE_URL
+      value: postgres://postgres:postgrespassword@db-users.backend-ns-dev.svc.cluster.local:5432/users?sslmode=disable
+- target:
+    kind: Secret
+    name: user-service-secret
+  patch: |
+    - op: replace
+      path: /stringData/DATABASE_URL
+      value: postgres://postgres:postgrespassword@db-users.backend-ns-dev.svc.cluster.local:5432/users?sslmode=disable
+
