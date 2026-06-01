@@ -5,6 +5,7 @@ namespace: backend-ns-dev
 
 resources:
 - ../../../base/backend
+- ./environment-config.yaml
 
 patches:
 # Patch for allow-backends network policy to use frontend-ns-dev namespace
@@ -104,4 +105,32 @@ patches:
     - op: replace
       path: /stringData/DATABASE_URL
       value: postgres://postgres:postgrespassword@db-users.backend-ns-dev.svc.cluster.local:5432/users?sslmode=disable
+
+replacements:
+- source:
+    kind: ConfigMap
+    name: environment-config-backend
+    fieldPath: data.DOMAIN
+  targets:
+  - select:
+      kind: Ingress
+      name: booking-ingress
+    fieldPaths:
+    - spec.rules.0.host
+  - select:
+      kind: Ingress
+      name: catalog-ingress
+    fieldPaths:
+    - spec.rules.0.host
+  - select:
+      kind: Ingress
+      name: showtime-ingress
+    fieldPaths:
+    - spec.rules.0.host
+  - select:
+      kind: Ingress
+      name: user-ingress
+    fieldPaths:
+    - spec.rules.0.host
+
 

@@ -4,14 +4,18 @@ kind: Kustomization
 namespace: backend-ns
 
 resources:
-- booking-service/deployment.yaml
+- booking-service/rollout.yaml
 - booking-service/service.yaml
-- catalog-service/deployment.yaml
+- booking-service/ingress.yaml
+- catalog-service/rollout.yaml
 - catalog-service/service.yaml
-- showtime-service/deployment.yaml
+- catalog-service/ingress.yaml
+- showtime-service/rollout.yaml
 - showtime-service/service.yaml
-- user-service/deployment.yaml
+- showtime-service/ingress.yaml
+- user-service/rollout.yaml
 - user-service/service.yaml
+- user-service/ingress.yaml
 - db-booking/service.yaml
 - db-booking/statefulset.yaml
 - db-catalog/service.yaml

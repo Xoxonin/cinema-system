@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment-config-backend
+  namespace: backend-ns-dev
+data:
+  DOMAIN: dev-cinema.mazadonia.cc

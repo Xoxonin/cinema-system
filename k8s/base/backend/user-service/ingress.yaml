@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: user-ingress
+  namespace: backend-ns
+  annotations:
+    # --- SESJA LEPKIE (STICKY SESSIONS) ---
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route-user"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+    
+    # --- ZACHOWANIE SESJI LEPKIEJ W PROCESIE CANARY ---
+    nginx.ingress.kubernetes.io/affinity-canary-behavior: "sticky"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: cinema.mazadonia.cc
+    http:
+      paths:
+      - path: /api/users
+        pathType: Prefix
+        backend:
+          service:
+            name: user-service
+            port:
+              number: 8081

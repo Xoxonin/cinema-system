@@ -12,3 +12,18 @@ spec:
     name: http
   selector:
     app: catalog-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service-canary
+  namespace: backend-ns
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8082
+    targetPort: 8082
+    protocol: TCP
+    name: http
+  selector:
+    app: catalog-service

@@ -1,24 +1,32 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
-  name: booking-service
+  name: user-service
   namespace: backend-ns
   labels:
-    app: booking-service
+    app: user-service
 spec:
   replicas: 2
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
+    canary:
+      stableService: user-service
+      canaryService: user-service-canary
+      trafficRouting:
+        nginx:
+          stableIngress: user-ingress
+      steps:
+      - setWeight: 10
+      - pause: { duration: 5m }
+      - setWeight: 50
+      - pause: {}
+      - setWeight: 100
   selector:
     matchLabels:
-      app: booking-service
+      app: user-service
   template:
     metadata:
       labels:
-        app: booking-service
+        app: user-service
     spec:
       securityContext:
         runAsNonRoot: true
@@ -35,7 +43,7 @@ spec:
                 - key: app
                   operator: In
                   values:
-                  - booking-service
+                  - user-service
               topologyKey: kubernetes.io/hostname
         podAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -46,7 +54,7 @@ spec:
                 - key: app
                   operator: In
                   values:
-                  - db-booking
+                  - db-users
               topologyKey: kubernetes.io/hostname
       initContainers:
       - name: db-migration
@@ -60,7 +68,7 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: db-booking-secret
+              name: user-service-secret
               key: DATABASE_URL
         volumeMounts:
         - name: migration-dir
@@ -73,11 +81,11 @@ spec:
             cpu: 100m
             memory: 64Mi
       containers:
-      - name: booking-service
-        image: adamad7/booking-service:1.0.4
+      - name: user-service
+        image: adamad7/user-service:1.0.4
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8084
+        - containerPort: 8081
           name: http
         securityContext:
           readOnlyRootFilesystem: true
@@ -89,18 +97,23 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: db-booking-secret
+              name: user-service-secret
               key: DATABASE_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: user-service-secret
+              key: JWT_SECRET
         livenessProbe:
           httpGet:
             path: /health
-            port: 8084
+            port: 8081
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
-            port: 8084
+            port: 8081
           initialDelaySeconds: 5
           periodSeconds: 5
         resources:
@@ -116,6 +129,6 @@ spec:
       volumes:
       - name: migration-dir
         configMap:
-          name: booking-db-migrations
+          name: user-db-migrations
       - name: tmp-volume
         emptyDir: {}
