@@ -82,7 +82,7 @@ spec:
             memory: 64Mi
       containers:
       - name: showtime-service
-        image: adamad7/showtime-service:1.0.4
+        image: adamad7/showtime-service:kustomize-placeholder
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8083

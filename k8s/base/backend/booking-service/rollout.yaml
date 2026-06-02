@@ -82,7 +82,7 @@ spec:
             memory: 64Mi
       containers:
       - name: booking-service
-        image: adamad7/booking-service:1.0.4
+        image: adamad7/booking-service:kustomize-placeholder
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8084

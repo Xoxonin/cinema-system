@@ -18,3 +18,7 @@ replacements:
       name: cinema-ingress
     fieldPaths:
     - spec.rules.0.host
+
+images:
+- name: adamad7/frontend
+  newTag: "1.0.4"

@@ -82,7 +82,7 @@ spec:
             memory: 64Mi
       containers:
       - name: catalog-service
-        image: adamad7/catalog-service:1.0.4
+        image: adamad7/catalog-service:kustomize-placeholder
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8082

@@ -34,3 +34,13 @@ replacements:
       name: user-ingress
     fieldPaths:
     - spec.rules.0.host
+
+images:
+- name: adamad7/booking-service
+  newTag: "1.0.4"
+- name: adamad7/catalog-service
+  newTag: "1.0.4"
+- name: adamad7/showtime-service
+  newTag: "1.0.4"
+- name: adamad7/user-service
+  newTag: "1.0.4"

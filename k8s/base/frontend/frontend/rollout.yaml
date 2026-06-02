@@ -47,7 +47,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
       - name: frontend
-        image: adamad7/frontend:1.0.4
+        image: adamad7/frontend:kustomize-placeholder
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
