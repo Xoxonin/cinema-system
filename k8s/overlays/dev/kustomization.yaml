@@ -9,7 +9,7 @@ resources:
 
 images:
 - name: adamad7/frontend
-  newTag: "1.0.4"
+  newTag: "1.0.5"
 - name: adamad7/booking-service
   newTag: "1.0.4"
 - name: adamad7/catalog-service
