@@ -6,3 +6,15 @@ resources:
 - frontend/
 - 00-backend-ns.yaml
 - 00-frontend-ns.yaml
+
+images:
+- name: adamad7/frontend
+  newTag: "1.0.4"
+- name: adamad7/booking-service
+  newTag: "1.0.4"
+- name: adamad7/catalog-service
+  newTag: "1.0.4"
+- name: adamad7/showtime-service
+  newTag: "1.0.4"
+- name: adamad7/user-service
+  newTag: "1.0.4"

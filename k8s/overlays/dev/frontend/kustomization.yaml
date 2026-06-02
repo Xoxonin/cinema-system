@@ -78,7 +78,3 @@ replacements:
       name: user-service
     fieldPaths:
     - spec.externalName
-
-images:
-- name: adamad7/frontend
-  newTag: "1.0.4"
