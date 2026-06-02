@@ -3,6 +3,16 @@ kind: Ingress
 metadata:
   name: cinema-ingress
   namespace: frontend-ns
+  annotations:
+    # --- SESJA LEPKIE (STICKY SESSIONS) ---
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route-frontend"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+    
+    # --- ZACHOWANIE SESJI LEPKIEJ W PROCESIE CANARY ---
+    nginx.ingress.kubernetes.io/affinity-canary-behavior: "sticky"
 spec:
   ingressClassName: nginx
   rules:
