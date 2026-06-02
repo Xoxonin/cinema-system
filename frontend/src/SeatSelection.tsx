@@ -122,7 +122,7 @@ export function SeatSelection({ token }: { token: string | null }) {
 
   return (
     <main className="max-w-5xl mx-auto flex flex-col items-center">
-      <h1 className="text-3xl font-extrabold mb-8 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+      <h1 className="text-3xl font-extrabold mb-8 text-center bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
         Select Your Seats
       </h1>
       
@@ -153,8 +153,8 @@ export function SeatSelection({ token }: { token: string | null }) {
                            onClick={() => toggleSeat(rowLayout.row, s)}
                            className={`w-10 h-10 rounded-t-xl rounded-b sm flex items-center justify-center text-xs font-bold transition-all shadow-md
                              ${taken ? 'bg-gray-700 text-gray-600 cursor-not-allowed shadow-inner' : 
-                               selected ? 'bg-pink-500 text-white shadow-pink-500/50 scale-110' : 
-                               'bg-purple-600 hover:bg-purple-500 text-purple-100 hover:-translate-y-1'}`}
+                               selected ? 'bg-orange-500 text-white shadow-orange-500/50 scale-110' : 
+                               'bg-yellow-500 hover:bg-yellow-400 text-gray-900 hover:-translate-y-1'}`}
                         >
                           {s}
                         </button>
@@ -166,11 +166,11 @@ export function SeatSelection({ token }: { token: string | null }) {
            
            <div className="flex justify-center gap-8 mt-12 bg-gray-900/50 p-4 rounded-xl max-w-lg mx-auto">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-purple-600 shadow"></div>
+                <div className="w-6 h-6 rounded bg-yellow-500 shadow"></div>
                 <span className="text-sm text-gray-400">Available</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-pink-500 shadow"></div>
+                <div className="w-6 h-6 rounded bg-orange-500 shadow"></div>
                 <span className="text-sm text-gray-400">Selected</span>
               </div>
               <div className="flex items-center gap-2">
@@ -186,14 +186,14 @@ export function SeatSelection({ token }: { token: string | null }) {
            <div className="max-w-6xl mx-auto w-full flex justify-between items-center">
              <div className="flex flex-col">
                <span className="text-gray-400 text-sm">Seats selected:</span>
-               <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+               <span className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
                  {selectedSeats.length} ({selectedSeats.join(', ')})
                </span>
              </div>
              <button 
                 onClick={proceedToTickets} 
                 disabled={loading}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg hover:shadow-pink-500/30 transition-all active:scale-95 disabled:opacity-50"
+                className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold rounded-xl shadow-lg hover:shadow-orange-500/30 transition-all active:scale-95 disabled:opacity-50"
              >
                 {loading ? 'Locking...' : 'Proceed to Tickets'}
              </button>

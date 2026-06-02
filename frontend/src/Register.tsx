@@ -34,25 +34,25 @@ export function Register() {
       <form onSubmit={handleRegister} className="flex flex-col space-y-4">
         <input 
           type="text" placeholder="Username" required 
-          className="p-3 rounded bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="p-3 rounded bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
           value={username} onChange={e => setUsername(e.target.value)} 
         />
         <input 
           type="email" placeholder="Email" required 
-          className="p-3 rounded bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="p-3 rounded bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
           value={email} onChange={e => setEmail(e.target.value)} 
         />
         <input 
           type="password" placeholder="Password" required 
-          className="p-3 rounded bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="p-3 rounded bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
           value={password} onChange={e => setPassword(e.target.value)} 
         />
-        <button type="submit" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-3 rounded shadow hover:shadow-lg transition-all">
+        <button type="submit" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold py-3 rounded shadow hover:shadow-lg transition-all">
           Create Account
         </button>
       </form>
       <p className="mt-6 text-center text-gray-400">
-        Already have an account? <Link to="/login" className="text-pink-400 hover:text-pink-300">Login</Link>
+        Already have an account? <Link to="/login" className="text-orange-400 hover:text-orange-300">Login</Link>
       </p>
     </div>
   );

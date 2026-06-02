@@ -20,21 +20,21 @@ function Navbar({ token, setAuthToken }: { token: string | null, setAuthToken: (
 
   return (
     <header className="max-w-6xl mx-auto flex justify-between items-center bg-gray-800 p-6 rounded-xl shadow-lg mb-12 border border-gray-700">
-      <Link to="/" className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-        MovieKube
+      <Link to="/" className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+        MovieKube (Canary)
       </Link>
       <nav className="flex space-x-6 text-lg font-medium items-center">
-        <Link to="/" className="hover:text-purple-400 transition-colors">Movies</Link>
+        <Link to="/" className="hover:text-yellow-400 transition-colors">Movies</Link>
         {token ? (
           <>
-            <Link to="/my-tickets" className="hover:text-pink-400 transition-colors">My Tickets</Link>
-            <Link to="/profile" className="hover:text-pink-400 transition-colors">Profile</Link>
+            <Link to="/my-tickets" className="hover:text-orange-400 transition-colors">My Tickets</Link>
+            <Link to="/profile" className="hover:text-orange-400 transition-colors">Profile</Link>
             <button onClick={handleLogout} className="px-4 py-2 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors border border-red-500 hover:border-transparent">Logout</button>
           </>
         ) : (
           <>
-            <Link to="/login" className="hover:text-purple-400 transition-colors">Login</Link>
-            <Link to="/register" className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-lg transition-colors shadow">Register</Link>
+            <Link to="/login" className="hover:text-yellow-400 transition-colors">Login</Link>
+            <Link to="/register" className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white rounded-lg transition-colors shadow">Register</Link>
           </>
         )}
       </nav>
