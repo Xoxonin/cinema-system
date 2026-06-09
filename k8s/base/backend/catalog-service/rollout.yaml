@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: catalog-service
   namespace: backend-ns
@@ -8,10 +8,18 @@ metadata:
 spec:
   replicas: 2
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
+    canary:
+      stableService: catalog-service
+      canaryService: catalog-service-canary
+      trafficRouting:
+        nginx:
+          stableIngress: catalog-ingress
+      steps:
+      - setWeight: 10
+      - pause: { duration: 5m }
+      - setWeight: 50
+      - pause: {}
+      - setWeight: 100
   selector:
     matchLabels:
       app: catalog-service
@@ -74,7 +82,7 @@ spec:
             memory: 64Mi
       containers:
       - name: catalog-service
-        image: adamad7/catalog-service:1.0.4
+        image: adamad7/catalog-service:kustomize-placeholder
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8082

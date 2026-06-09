@@ -1,12 +1,12 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: cinema-ingress
-  namespace: frontend-ns
+  name: catalog-ingress
+  namespace: backend-ns
   annotations:
     # --- SESJA LEPKIE (STICKY SESSIONS) ---
     nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingress.kubernetes.io/session-cookie-name: "route-frontend"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route-catalog"
     nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
     nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
@@ -19,10 +19,10 @@ spec:
   - host: cinema.mazadonia.cc
     http:
       paths:
-      - path: /
+      - path: /api/movies
         pathType: Prefix
         backend:
           service:
-            name: frontend
+            name: catalog-service
             port:
-              number: 80
+              number: 8082

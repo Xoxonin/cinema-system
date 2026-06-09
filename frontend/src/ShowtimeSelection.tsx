@@ -31,7 +31,7 @@ export function ShowtimeSelection() {
 
   return (
     <main className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-extrabold mb-8 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+      <h1 className="text-3xl font-extrabold mb-8 text-center bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
         Select Showtime
       </h1>
       
@@ -44,14 +44,14 @@ export function ShowtimeSelection() {
           {showtimes.map(st => {
             const dateObj = new Date(st.start_time);
             return (
-              <div key={st.id} className="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 hover:border-purple-500 transition-all duration-300 flex flex-col items-center group cursor-pointer" onClick={() => navigate(`/book/${st.id}/seats`)}>
-                <div className="text-purple-400 font-bold mb-2">
+              <div key={st.id} className="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 hover:border-yellow-500 transition-all duration-300 flex flex-col items-center group cursor-pointer" onClick={() => navigate(`/book/${st.id}/seats`)}>
+                <div className="text-yellow-400 font-bold mb-2">
                   {dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                 </div>
                 <div className="text-4xl font-black text-white mb-4 group-hover:scale-110 transition-transform">
                   {dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
-                <span className="bg-pink-500/20 text-pink-300 px-3 py-1 rounded-full text-sm font-semibold border border-pink-500/30">
+                <span className="bg-orange-500/20 text-orange-300 px-3 py-1 rounded-full text-sm font-semibold border border-orange-500/30">
                   {st.type || "2D"}
                 </span>
               </div>

@@ -37,13 +37,13 @@ export function Home({ token }: { token?: string | null }) {
         <div key={movie.id} className="bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-700 flex flex-col">
             <div className="w-full aspect-[2/3] bg-gray-700 rounded-lg mb-4 bg-gradient-to-t from-gray-800 to-transparent flex items-end p-4">
               {movie.release_date?.Valid && (
-                <span className="text-xs font-bold bg-purple-600 px-2 py-1 rounded text-white shadow">
+                <span className="text-xs font-bold bg-yellow-500 text-gray-900 px-2 py-1 rounded shadow">
                   {new Date(movie.release_date.Time).getFullYear()}
                 </span>
               )}
             </div>
             <h2 className="text-2xl font-bold mb-1 truncate" title={movie.title}>{movie.title}</h2>
-            <p className="text-sm text-pink-500 font-medium mb-3">{movie.duration_minutes} mins</p>
+            <p className="text-sm text-orange-500 font-medium mb-3">{movie.duration_minutes} mins</p>
             <p className="text-sm text-gray-400 mb-4 line-clamp-3 overflow-hidden flex-grow" title={movie.description?.Valid ? movie.description.String : ""}>
               {movie.description?.Valid ? movie.description.String : "No description available."}
             </p>
@@ -57,7 +57,7 @@ export function Home({ token }: { token?: string | null }) {
                     navigate(`/movie/${movie.id}/showtimes`);
                   }
                 }}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-pink-500/25 transition-all outline-none focus:ring-2 focus:ring-pink-400"
+                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-orange-500/25 transition-all outline-none focus:ring-2 focus:ring-orange-400"
               >
                 Book Ticket
               </button>

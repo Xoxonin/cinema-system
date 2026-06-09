@@ -1,24 +1,32 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
-  name: user-service
+  name: showtime-service
   namespace: backend-ns
   labels:
-    app: user-service
+    app: showtime-service
 spec:
   replicas: 2
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
+    canary:
+      stableService: showtime-service
+      canaryService: showtime-service-canary
+      trafficRouting:
+        nginx:
+          stableIngress: showtime-ingress
+      steps:
+      - setWeight: 10
+      - pause: { duration: 5m }
+      - setWeight: 50
+      - pause: {}
+      - setWeight: 100
   selector:
     matchLabels:
-      app: user-service
+      app: showtime-service
   template:
     metadata:
       labels:
-        app: user-service
+        app: showtime-service
     spec:
       securityContext:
         runAsNonRoot: true
@@ -35,7 +43,7 @@ spec:
                 - key: app
                   operator: In
                   values:
-                  - user-service
+                  - showtime-service
               topologyKey: kubernetes.io/hostname
         podAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -46,7 +54,7 @@ spec:
                 - key: app
                   operator: In
                   values:
-                  - db-users
+                  - db-showtime
               topologyKey: kubernetes.io/hostname
       initContainers:
       - name: db-migration
@@ -60,7 +68,7 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: user-service-secret
+              name: db-showtime-secret
               key: DATABASE_URL
         volumeMounts:
         - name: migration-dir
@@ -73,11 +81,11 @@ spec:
             cpu: 100m
             memory: 64Mi
       containers:
-      - name: user-service
-        image: adamad7/user-service:1.0.4
+      - name: showtime-service
+        image: adamad7/showtime-service:kustomize-placeholder
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8081
+        - containerPort: 8083
           name: http
         securityContext:
           readOnlyRootFilesystem: true
@@ -89,23 +97,18 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: user-service-secret
+              name: db-showtime-secret
               key: DATABASE_URL
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: user-service-secret
-              key: JWT_SECRET
         livenessProbe:
           httpGet:
             path: /health
-            port: 8081
+            port: 8083
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
-            port: 8081
+            port: 8083
           initialDelaySeconds: 5
           periodSeconds: 5
         resources:
@@ -121,6 +124,6 @@ spec:
       volumes:
       - name: migration-dir
         configMap:
-          name: user-db-migrations
+          name: showtime-db-migrations
       - name: tmp-volume
         emptyDir: {}

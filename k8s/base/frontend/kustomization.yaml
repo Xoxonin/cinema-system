@@ -4,7 +4,7 @@ kind: Kustomization
 namespace: frontend-ns
 
 resources:
-- frontend/deployment.yaml
+- frontend/rollout.yaml
 - frontend/ext-booking-service.yaml
 - frontend/ext-catalog-service.yaml
 - frontend/ext-showtime-service.yaml

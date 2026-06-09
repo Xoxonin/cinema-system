@@ -120,14 +120,14 @@ export function MyTickets({ token }: { token: string | null }) {
 
   return (
     <main className="max-w-5xl mx-auto p-4">
-      <h1 className="text-4xl font-black mb-12 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+      <h1 className="text-4xl font-black mb-12 text-center bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
         My Tickets
       </h1>
       
       <div className="space-y-12">
         <section>
            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <div className="w-3 h-8 bg-purple-500 rounded-full"></div>
+              <div className="w-3 h-8 bg-yellow-500 rounded-full"></div>
               Upcoming Shows
            </h2>
            {upcoming.length === 0 ? (
@@ -135,9 +135,9 @@ export function MyTickets({ token }: { token: string | null }) {
            ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  {upcoming.map(group => (
-                    <div key={group.showtime_id} className="bg-gradient-to-br from-gray-800 to-gray-900 border border-purple-500/30 p-6 rounded-2xl shadow-xl hover:shadow-purple-500/20 transition-all">
+                    <div key={group.showtime_id} className="bg-gradient-to-br from-gray-800 to-gray-900 border border-yellow-500/30 p-6 rounded-2xl shadow-xl hover:shadow-yellow-500/20 transition-all">
                        <h3 className="text-2xl font-bold mb-2 truncate" title={group.movie?.title}>{group.movie?.title}</h3>
-                       <div className="text-pink-400 font-bold mb-4 opacity-90 inline-block px-3 py-1 bg-pink-500/10 rounded-lg">
+                       <div className="text-orange-400 font-bold mb-4 opacity-90 inline-block px-3 py-1 bg-orange-500/10 rounded-lg">
                           {new Date(group.showtime.start_time).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                        </div>
                        

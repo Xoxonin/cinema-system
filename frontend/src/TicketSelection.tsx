@@ -96,7 +96,7 @@ export function TicketSelection({ token }: { token: string | null }) {
 
   return (
     <main className="max-w-3xl mx-auto flex flex-col items-center">
-      <h1 className="text-3xl font-extrabold mb-8 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+      <h1 className="text-3xl font-extrabold mb-8 text-center bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
         Select Ticket Types
       </h1>
 
@@ -107,7 +107,7 @@ export function TicketSelection({ token }: { token: string | null }) {
             {tickets.map(t => (
                <div key={t.seat} className="flex justify-between items-center p-4 bg-gray-900 rounded-xl border border-gray-800">
                   <div className="flex gap-4 items-center">
-                    <div className="w-12 h-12 bg-purple-600/20 text-purple-400 rounded-lg flex items-center justify-center font-bold text-xl border border-purple-500/50">
+                    <div className="w-12 h-12 bg-yellow-500/20 text-yellow-400 rounded-lg flex items-center justify-center font-bold text-xl border border-yellow-500/50">
                        {t.seat.split('-')[1]}
                     </div>
                     <div>
@@ -118,11 +118,11 @@ export function TicketSelection({ token }: { token: string | null }) {
                   <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700">
                      <button 
                         onClick={() => setTicketType(t.seat, 'Normal')}
-                        className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${t.type === 'Normal' ? 'bg-purple-600 outline-none shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
+                        className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${t.type === 'Normal' ? 'bg-yellow-500 text-gray-900 outline-none shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
                      >Normal</button>
                      <button 
                         onClick={() => setTicketType(t.seat, 'Reduced')}
-                        className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${t.type === 'Reduced' ? 'bg-pink-500 outline-none shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
+                        className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${t.type === 'Reduced' ? 'bg-orange-500 text-white outline-none shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
                      >Reduced</button>
                   </div>
                </div>
@@ -136,7 +136,7 @@ export function TicketSelection({ token }: { token: string | null }) {
             <button 
                onClick={confirmBooking} 
                disabled={loading}
-               className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg hover:shadow-pink-500/30 transition-all active:scale-95 disabled:opacity-50"
+               className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold rounded-xl shadow-lg hover:shadow-orange-500/30 transition-all active:scale-95 disabled:opacity-50"
             >
                {loading ? 'Confirming...' : 'Confirm Booking'}
             </button>

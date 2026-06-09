@@ -1,24 +1,32 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
-  name: showtime-service
+  name: booking-service
   namespace: backend-ns
   labels:
-    app: showtime-service
+    app: booking-service
 spec:
   replicas: 2
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
+    canary:
+      stableService: booking-service
+      canaryService: booking-service-canary
+      trafficRouting:
+        nginx:
+          stableIngress: booking-ingress
+      steps:
+      - setWeight: 10
+      - pause: { duration: 5m }
+      - setWeight: 50
+      - pause: {}
+      - setWeight: 100
   selector:
     matchLabels:
-      app: showtime-service
+      app: booking-service
   template:
     metadata:
       labels:
-        app: showtime-service
+        app: booking-service
     spec:
       securityContext:
         runAsNonRoot: true
@@ -35,7 +43,7 @@ spec:
                 - key: app
                   operator: In
                   values:
-                  - showtime-service
+                  - booking-service
               topologyKey: kubernetes.io/hostname
         podAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -46,7 +54,7 @@ spec:
                 - key: app
                   operator: In
                   values:
-                  - db-showtime
+                  - db-booking
               topologyKey: kubernetes.io/hostname
       initContainers:
       - name: db-migration
@@ -60,7 +68,7 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: db-showtime-secret
+              name: db-booking-secret
               key: DATABASE_URL
         volumeMounts:
         - name: migration-dir
@@ -73,11 +81,11 @@ spec:
             cpu: 100m
             memory: 64Mi
       containers:
-      - name: showtime-service
-        image: adamad7/showtime-service:1.0.4
+      - name: booking-service
+        image: adamad7/booking-service:kustomize-placeholder
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8083
+        - containerPort: 8084
           name: http
         securityContext:
           readOnlyRootFilesystem: true
@@ -89,18 +97,18 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: db-showtime-secret
+              name: db-booking-secret
               key: DATABASE_URL
         livenessProbe:
           httpGet:
             path: /health
-            port: 8083
+            port: 8084
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
-            port: 8083
+            port: 8084
           initialDelaySeconds: 5
           periodSeconds: 5
         resources:
@@ -116,6 +124,6 @@ spec:
       volumes:
       - name: migration-dir
         configMap:
-          name: showtime-db-migrations
+          name: booking-db-migrations
       - name: tmp-volume
         emptyDir: {}

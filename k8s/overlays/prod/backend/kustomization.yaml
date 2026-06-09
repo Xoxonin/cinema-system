@@ -6,3 +6,33 @@ namespace: backend-ns
 resources:
 - ../../../base/backend
 - ./storage-class.yaml
+- ./environment-config.yaml
+
+replacements:
+- source:
+    kind: ConfigMap
+    name: environment-config-backend
+    fieldPath: data.DOMAIN
+  targets:
+  - select:
+      kind: Ingress
+      name: booking-ingress
+    fieldPaths:
+    - spec.rules.0.host
+  - select:
+      kind: Ingress
+      name: catalog-ingress
+    fieldPaths:
+    - spec.rules.0.host
+  - select:
+      kind: Ingress
+      name: showtime-ingress
+    fieldPaths:
+    - spec.rules.0.host
+  - select:
+      kind: Ingress
+      name: user-ingress
+    fieldPaths:
+    - spec.rules.0.host
+
+

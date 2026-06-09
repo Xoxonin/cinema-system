@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: frontend
   namespace: frontend-ns
@@ -8,10 +8,18 @@ metadata:
 spec:
   replicas: 2
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
+    canary:
+      stableService: frontend
+      canaryService: frontend-canary
+      trafficRouting:
+        nginx:
+          stableIngress: cinema-ingress
+      steps:
+      - setWeight: 10
+      - pause: { duration: 5m }
+      - setWeight: 50
+      - pause: {}
+      - setWeight: 100
   selector:
     matchLabels:
       app: frontend
@@ -39,7 +47,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
       - name: frontend
-        image: adamad7/frontend:1.0.4
+        image: adamad7/frontend:kustomize-placeholder
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
